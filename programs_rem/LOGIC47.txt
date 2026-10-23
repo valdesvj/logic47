@@ -1,0 +1,760 @@
+REM LOGIC47 v0.1.0 - Logic 47: propositional logic on the C47 / R47
+REM A formula of up to six variables p q r s t u, the constants ⊤ ⊥, the connectives ¬ ∧ ∨ ⊕ → ↔ and brackets,
+REM keyed with the soft keys F1-F6 (three pages: 1 the variables, 2 the connectives, 3 the brackets and
+REM constants). 5 evaluates it: TAUTOLOGY, CONTRADICTION or CONTINGENCY, the number of rows where it is
+REM true, and for a contingency a row where it is true and one where it is false.
+REM The whole truth table at once: each variable is a 64-bit word, bit k = its value in row k (p = ...1010,
+REM q = ...1100, r = ...11110000, ... u = 32 ones then 32 zeros), so the formula evaluated once with AND, OR,
+REM XOR and NOT gives the word of its 64 rows. A variable not in the formula only repeats rows: the rows are
+REM 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
+REM Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
+REM Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
+REM The user's stack and LASTx are kept; at the end R20-R92 are cleared, WSIZE stays 64.
+REM Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
+REM Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
+REM R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
+REM R34 the text, R35 the value stack pointer (values R50-R69), R36 the operator stack pointer (R70-R89),
+REM R37 1: syntax error, R38 the code, R39-R45 work, R46 the symbols "pqrstu⊤⊥¬∧∨⊕→↔()" (code = place),
+REM R47 the true rows, R48 a true row, R49 a false row, R90-R92 the pages' symbols.
+REM Control flow in the C47 STRUCT commands (IF / ELSE / ENDIF, DO / WHILE / ENDDO), indented two spaces per
+REM level; tools/build_logic47.py checks them and numbers them.
+LBL "LOGIC47"
+REM the user's stack in the local registers (as ELEM47 v1.2.0): X..T, A..D with R↓, then LASTx
+LocR 10
+STO R.00
+R↓
+STO R.01
+R↓
+STO R.02
+R↓
+STO R.03
+R↓
+STO R.04
+R↓
+STO R.05
+R↓
+STO R.06
+R↓
+STO R.07
+R↓
+LASTx
+STO R.08
+XEQ :INIT:
+REM ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 7 (52) clear, 0 end ----
+DO
+  DO
+    PAUSE 50
+    KEY? 23
+  WHILE
+  ENDDO
+  RCL 23
+  82
+  X≠Y?
+WHILE
+  RCL 23
+  17
+  X>Y?
+  XEQ :FKEY:
+  RCL 23
+  71
+  -
+  STO 39
+  REM 1 2 3: |key - 73| <= 1
+  73
+  RCL 23
+  -
+  ABS
+  1
+  X≥Y?
+  XEQ :PAGE:
+  RCL 23
+  62
+  X=Y?
+  XEQ :DEL:
+  RCL 23
+  63
+  X=Y?
+  XEQ :EVAL:
+  RCL 23
+  52
+  X=Y?
+  XEQ :CLEAR:
+ENDDO
+REM ---- 0: the end: R20-R92 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.73
+R-CLR
+0
+GRMOD
+20
+GRFNT
+CLLCD
+RCL R.08
+STO L
+RCL R.07
+RCL R.06
+RCL R.05
+RCL R.04
+RCL R.03
+RCL R.02
+RCL R.01
+RCL R.00
+RTN
+REM ---- LBL :FKEY: F1-F6 (key 11-16; other keys below 17: nothing): the symbol n of the page appended ----
+LBL :FKEY:
+RCL 23
+10
+-
+X≤0?
+RTN
+STO 39
+RCL 20
+89
++
+STO 40
+RCL IND 40
+STO 41
+REM the page's text has fewer symbols than keys: nothing (its length: the place of a "|" put at its end)
+"|"
+x→α 41
+"|"
+αPOS 41
+RCL 39
+X>Y?
+RTN
+RCL IND 40
+STO 41
+RCL 39
+1
+-
+αSL 41
+1
+αLEFT 41
+x→α 21
+1
+STO+ 22
+XEQ :SHOWF:
+RTN
+REM ---- LBL :PAGE: the page R39 (1-3) and its soft-key labels ----
+LBL :PAGE:
+RCL 39
+STO 20
+XEQ :LABELS:
+RTN
+REM ---- LBL :DEL: the last symbol off (">" stays) ----
+LBL :DEL:
+RCL 22
+X=0?
+RTN
+1
+STO- 22
+RCL 22
+1
++
+αLEFT 21
+STO 21
+XEQ :SHOWF:
+RTN
+REM ---- LBL :CLEAR: the formula empty ----
+LBL :CLEAR:
+">"
+STO 21
+0
+STO 22
+XEQ :SHOWF:
+RTN
+REM ---- LBL :SHOWF: the formula (rows 36 up cleared: the result too; ATEXT goes on to the next line past x 380), the result
+REM area cleared ----
+LBL :SHOWF:
+36
+0
+CLLCDxy
+0
+GRMOD
+10
+GRFNT
+"LOGIC 47 - PROPOSITIONAL LOGIC"
+230
+6
+ATEXT Z
+21
+GRFNT
+RCL 21
+200
+6
+ATEXT Z
+RTN
+REM ---- LBL :EVAL: the formula evaluated on the words (shunting-yard: the values on R50-R69, the operators on
+REM R70-R89), then LBL :VERDICT: ----
+LBL :EVAL:
+49
+STO 35
+69
+STO 36
+0
+STO 37
+STO 33
+DO
+  RCL 33
+  RCL 22
+  X>Y?
+WHILE
+  REM the symbol: R21 without its first R33 + 1 characters, the first one left; its code in R46
+  1
+  STO+ 33
+  RCL 21
+  STO 41
+  RCL 33
+  αSL 41
+  1
+  αLEFT 41
+  αPOS 46
+  STO 38
+  XEQ :TOKEN:
+ENDDO
+REM the operators left, then exactly one value
+DO
+  RCL 36
+  69
+  X<Y?
+WHILE
+  XEQ :POPOP:
+  STO 39
+  14
+  X=Y?
+  XEQ :ERR:
+  RCL 39
+  14
+  X≠Y?
+  XEQ :APPLY2:
+ENDDO
+RCL 35
+50
+X≠Y?
+XEQ :ERR:
+RCL 50
+STO 24
+XEQ :VERDICT:
+RTN
+REM ---- LBL :TOKEN: the code R38: 0-7 a value, 8 ¬, 9-13 a binary connective, 14 (, 15 ) ----
+LBL :TOKEN:
+RCL 38
+7
+X≥Y?
+XEQ :VALUE:
+RCL 38
+8
+X=Y?
+XEQ :PUSHOP:
+RCL 38
+14
+X=Y?
+XEQ :PUSHOP:
+RCL 38
+15
+X=Y?
+XEQ :CLOSE:
+REM 9-13: |c - 11| <= 2
+RCL 38
+11
+-
+ABS
+2
+X≥Y?
+XEQ :BINARY:
+RTN
+REM LBL :VALUE: the word of the variable or constant, R25 + code
+LBL :VALUE:
+RCL 38
+25
++
+STO 39
+RCL IND 39
+XEQ :PUSHV:
+RTN
+REM LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
+LBL :CLOSE:
+DO
+  XEQ :TOPC:
+  14
+  X≠Y?
+WHILE
+  XEQ :POPOP:
+  XEQ :APPLY:
+ENDDO
+RCL 36
+69
+X<Y?
+XEQ :POPOP:
+RTN
+REM LBL :TOPC: the top operator's code in X; none: a syntax error and 14 (as if "(")
+LBL :TOPC:
+RCL 36
+69
+X≥Y?
+GTO :NOPEN:
+RCL IND 36
+RTN
+LBL :NOPEN:
+XEQ :ERR:
+14
+RTN
+REM ---- LBL :BINARY: a binary connective, the code R38 9-13 ----
+LBL :BINARY:
+REM the operators on top with a higher precedence (or the same, for all but →) applied first
+DO
+  XEQ :MORE:
+  RCL 42
+  X≠0?
+WHILE
+  XEQ :POPOP:
+  XEQ :APPLY:
+ENDDO
+RCL 38
+XEQ :PUSHOP:
+RTN
+REM LBL :MORE: R42 = 1 when the top operator (not "(") goes before the code R38: prec(top) > prec(c), or
+REM equal and c is not →. prec: 543321 for the codes 8-13 (¬ ∧ ∨ ⊕ → ↔)
+LBL :MORE:
+0
+STO 42
+RCL 36
+69
+X≥Y?
+RTN
+RCL IND 36
+14
+X=Y?
+RTN
+RCL IND 36
+XEQ :PREC:
+STO 43
+RCL 38
+XEQ :PREC:
+STO 44
+RCL 43
+X<Y?
+RTN
+X>Y?
+XEQ :YES:
+RCL 38
+12
+X≠Y?
+XEQ :YES:
+RTN
+LBL :YES:
+1
+STO 42
+RTN
+REM LBL :PREC: the precedence of the code in X (8-13)
+LBL :PREC:
+13
+X<>Y
+-
+10
+X<>Y
+Y^X
+543321
+X<>Y
+÷
+IP
+10
+MOD
+RTN
+REM LBL :APPLY2: the operator R39 (an unmatched "(" left out)
+LBL :APPLY2:
+RCL 39
+XEQ :APPLY:
+RTN
+REM ---- LBL :APPLY: the operator X (8-13) on the values: ¬ one, the others two (LBL 68-73) ----
+LBL :APPLY:
+60
++
+STO 45
+XEQ IND 45
+RTN
+LBL 68
+XEQ :POPV:
+NOT
+XEQ :PUSHV:
+RTN
+LBL 69
+XEQ :POP2:
+AND
+XEQ :PUSHV:
+RTN
+LBL 70
+XEQ :POP2:
+OR
+XEQ :PUSHV:
+RTN
+LBL 71
+XEQ :POP2:
+XOR
+XEQ :PUSHV:
+RTN
+LBL 72
+XEQ :POPV:
+STO 39
+XEQ :POPV:
+NOT
+RCL 39
+OR
+XEQ :PUSHV:
+RTN
+LBL 73
+XEQ :POP2:
+XOR
+NOT
+XEQ :PUSHV:
+RTN
+REM LBL :POP2: Y = the first value, X = the second
+LBL :POP2:
+XEQ :POPV:
+STO 39
+XEQ :POPV:
+RCL 39
+RTN
+REM ---- the stacks: LBL :PUSHV: X on the values, LBL :POPV: the top value in X (none: a syntax error and 0);
+REM LBL :PUSHOP: X on the operators, LBL :POPOP: the top operator in X ----
+LBL :PUSHV:
+1
+STO+ 35
+R↓
+STO IND 35
+RTN
+LBL :POPV:
+RCL 35
+49
+X≥Y?
+XEQ :EMPTY:
+RCL IND 35
+1
+STO- 35
+R↓
+RTN
+REM LBL :EMPTY: a value is missing: a syntax error, and a 0 pushed for it
+LBL :EMPTY:
+XEQ :ERR:
+0
+XEQ :PUSHV:
+RTN
+LBL :PUSHOP:
+1
+STO+ 36
+R↓
+STO IND 36
+RTN
+LBL :POPOP:
+RCL IND 36
+1
+STO- 36
+R↓
+RTN
+LBL :ERR:
+1
+STO 37
+RTN
+REM ---- LBL :VERDICT: the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
+REM down to 0: BS? IND 45); R40 the variables used (n), R41 2^(6 - n) ----
+LBL :VERDICT:
+RCL 37
+X≠0?
+GTO :SYNTAX:
+0
+STO 47
+-1
+STO 48
+STO 49
+64
+STO 44
+DO
+  RCL 44
+  1
+  -
+  STO 45
+  RCL 24
+  BS? IND 45
+  XEQ :TRUE:
+  RCL 24
+  BC? IND 45
+  XEQ :FALSE:
+  DSE 44
+WHILE
+ENDDO
+REM the variables used: n = how many of p..u are in the formula
+0
+STO 40
+6
+STO 44
+DO
+  XEQ :USED?:
+  RCL 39
+  X≥0?
+  XEQ :INC40:
+  DSE 44
+WHILE
+ENDDO
+2
+6
+RCL 40
+-
+Y^X
+STO 41
+RCL 47
+X<>Y
+÷
+STO 47
+REM the screen: the verdict, the rows, the examples
+1
+GRMOD
+"                                                  "
+80
+6
+ATEXT Z
+"                                                  "
+60
+6
+ATEXT Z
+"                                                  "
+40
+6
+ATEXT Z
+0
+GRMOD
+"CONTINGENCY"
+STO 34
+RCL 47
+X=0?
+XEQ :CONTRA:
+RCL 49
+X<0?
+XEQ :TAUT:
+RCL 34
+80
+6
+ATEXT Z
+REM the rows: "true in 3 of 4 rows"
+"true in "
+STO 34
+RCL 47
+αIP 34
+" of "
+x→α 34
+2
+RCL 40
+Y^X
+αIP 34
+" rows"
+x→α 34
+RCL 34
+60
+6
+ATEXT Z
+REM a contingency: a true row and a false row (the variables used only)
+RCL 47
+X=0?
+RTN
+RCL 49
+X<0?
+RTN
+"T: "
+STO 34
+RCL 48
+XEQ :ROW:
+"  F: "
+x→α 34
+RCL 49
+XEQ :ROW:
+RCL 34
+40
+6
+ATEXT Z
+RTN
+REM LBL :TRUE:, LBL :FALSE: bit R45 is 1 / 0
+LBL :TRUE:
+1
+STO+ 47
+RCL 45
+STO 48
+RTN
+LBL :FALSE:
+RCL 45
+STO 49
+RTN
+LBL :INC40:
+1
+STO+ 40
+RTN
+LBL :CONTRA:
+"CONTRADICTION"
+STO 34
+RTN
+LBL :TAUT:
+"TAUTOLOGY"
+STO 34
+RTN
+REM LBL :USED?: R39 = the place of the variable 6 - R44 (p first) in the formula, -1 when not there
+LBL :USED?:
+6
+RCL 44
+-
+STO 39
+RCL 46
+STO 42
+RCL 39
+αSL 42
+1
+αLEFT 42
+αPOS 21
+STO 39
+RTN
+REM LBL :ROW: the values of the variables used in row X: "p=1 q=0 " appended to R34
+LBL :ROW:
+STO 45
+6
+STO 44
+DO
+  XEQ :USED?:
+  RCL 39
+  X≥0?
+  XEQ :VAR:
+  DSE 44
+WHILE
+ENDDO
+RTN
+REM LBL :VAR: "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
+LBL :VAR:
+RCL 46
+STO 42
+6
+RCL 44
+-
+STO 43
+αSL 42
+1
+αLEFT 42
+x→α 34
+"=0 "
+STO 42
+RCL 43
+25
++
+STO 43
+RCL IND 43
+BS? IND 45
+XEQ :ONE:
+RCL 42
+x→α 34
+RTN
+LBL :ONE:
+"=1 "
+STO 42
+RTN
+REM LBL :SYNTAX: the formula is not well formed
+LBL :SYNTAX:
+1
+GRMOD
+"                                                  "
+80
+6
+ATEXT Z
+0
+GRMOD
+"SYNTAX ERROR"
+80
+6
+ATEXT Z
+RTN
+REM ---- LBL :LABELS: the six soft-key labels of the page R20 (rows 0-19, one per 66 columns) ----
+LBL :LABELS:
+REM the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
+1
+GRMOD
+21
+GRFNT
+"                                                      "
+0
+0
+ATEXT Z
+0
+GRMOD
+RCL 20
+89
++
+STO 40
+RCL IND 40
+STO 41
+6
+STO 44
+DO
+  RCL 41
+  STO 42
+  6
+  RCL 44
+  -
+  STO 43
+  αSL 42
+  1
+  αLEFT 42
+  0
+  RCL 43
+  66
+  ×
+  29
+  +
+  ATEXT Z
+  DSE 44
+WHILE
+ENDDO
+XEQ :HINTS:
+XEQ :SHOWF:
+RTN
+REM LBL :HINTS: the keys (small font, row 26)
+LBL :HINTS:
+10
+GRFNT
+"1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  7 CLEAR  0 END"
+26
+6
+ATEXT Z
+21
+GRFNT
+RTN
+REM ---- LBL :INIT: the words, the symbols, the pages, the screen ----
+LBL :INIT:
+WSIZE 64
+REM p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
+1010101010101010101010101010101010101010101010101010101010101010#2
+STO 25
+1100110011001100110011001100110011001100110011001100110011001100#2
+STO 26
+1111000011110000111100001111000011110000111100001111000011110000#2
+STO 27
+1111111100000000111111110000000011111111000000001111111100000000#2
+STO 28
+1111111111111111000000000000000011111111111111110000000000000000#2
+STO 29
+1111111111111111111111111111111100000000000000000000000000000000#2
+STO 30
+1111111111111111111111111111111111111111111111111111111111111111#2
+STO 31
+0#2
+STO 32
+"pqrstu⊤⊥¬∧∨⊕→↔()"
+STO 46
+"pqrstu"
+STO 90
+"¬∧∨→↔⊕"
+STO 91
+"()⊤⊥"
+STO 92
+1
+STO 20
+">"
+STO 21
+0
+STO 22
+CLLCD
+XEQ :LABELS:
+RTN
+END
