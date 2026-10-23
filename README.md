@@ -42,8 +42,9 @@ The rows are those of the variables in the formula: 2ⁿ for n variables.
 ## The truth table (key 6)
 
 After 5, key 6 shows the table in the small font: a column for each variable used (p first, changing slowest),
-the formula's value `f` last, from all true down to all false; up to 64 rows on one screen, in columns of 16. Any key
-goes back to the formula and the verdict.
+the formula's value `Φ` last (1 true, 0 false), from all true down to all false; up to 64 rows on one screen, in
+blocks of 16 side by side (BLOCK 1-4 under them: read block 1 down, then block 2 ...). Any key goes back to the
+formula and the verdict.
 
 ![LOGIC47 truth table](docs/LOGIC47_table6.png)
 
@@ -83,7 +84,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
     python3 python/logic47sim.py     # docs/LOGIC47_*.png
     python3 tools/make_gif.py        # docs/LOGIC47_demo.gif
 
-Size: 955 steps, about 3.4 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
+Size: 982 steps, about 3.5 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
 Calculators: C47 / R47 with STRUCT, ATEXT and GRFNT (firmware 00.109.05.00a0.ALPHA or later, as Elements 47).
 **Not yet run on a real C47**: the bitwise commands (`AND OR XOR NOT BS? BC?`) are new to these projects and
 need a first try.

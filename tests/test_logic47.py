@@ -133,16 +133,19 @@ def rand_formula(rng, depth, vs):
 
 
 def table(f):
-    """Key 6 after 5: the truth table (small font): a header ' p q | f' over each column of 16, then the rows from
-    all true down to all false (the first variable changing slowest), the formula's value last."""
+    """Key 6 after 5: the truth table (small font): a header ' p q | Φ' over each column of 16, then the rows from
+    all true down to all false (the first variable changing slowest), the formula's value last; ' BLOCK 1' ... under
+    the columns when there are more than one."""
     shots, texts, c = L.run(L.keys(f) + [L.TABLE, L.EVAL, L.END])
     small = [t for g, t in texts if g == 10]
-    i = max(k for k, t in enumerate(small) if t.startswith(' ') and t.rstrip().endswith('| f'))
+    i = max(k for k, t in enumerate(small) if t.startswith(' ') and t.rstrip().endswith('| Φ'))
     while i > 0 and small[i - 1].startswith(' ') and '|' in small[i - 1] and small[i - 1] != 'ANY KEY: BACK':
         i -= 1
-    got_ = small[i:small.index('ANY KEY: BACK', i)]
+    end = small.index('ANY KEY: BACK', i)
+    blocks = [t for t in small[i:end] if t.startswith(' BLOCK ')]
+    got_ = [t for t in small[i:end] if not t.startswith(' BLOCK ')]
     e = parse(f); used = [v for v in VARS if v in f]; n = len(used)
-    head = ' ' + ''.join(v + ' ' for v in used) + '| f'
+    head = ' ' + ''.join(v + ' ' for v in used) + '| Φ'
     want = []
     for j, k in enumerate(range(2 ** n - 1, -1, -1)):
         if j % 16 == 0:
@@ -151,6 +154,8 @@ def table(f):
         row = {v: False for v in VARS}; row.update({v: bool(b) for v, b in zip(used, bits)})
         want.append(' ' + ''.join('%d ' % b for b in bits) + '| %d' % e(row))
     check(got_ == want, 'table %s: %s / %s' % (f, got_[:4], want[:4]))
+    nb = 2 ** n // 16
+    check(sorted(blocks) == ([' BLOCK %d' % b for b in range(1, nb + 1)] if nb > 1 else []), 'table %s: blocks %s' % (f, blocks))
 
 
 def ascii_only():

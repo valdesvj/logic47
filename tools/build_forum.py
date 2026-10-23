@@ -32,7 +32,7 @@ HEAD = {
 @ Tested:  1-6 variables against a separate Python evaluator
 @ Input:   the formula, keyed with F1-F6 on three pages (1 p q r s t u, 2 the connectives, 3 ( ) T F)
 @ Output:  p->q (keys F1, 2 F4, 1 F2, 5): CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0, F: p=1 q=0;
-@ Output:  then 6: the table p q | f: 1 1 | 1, 1 0 | 0, 0 1 | 1, 0 0 | 1
+@ Output:  then 6: the table p q | Φ: 1 1 | 1, 1 0 | 0, 0 1 | 1, 0 0 | 1 (Φ the formula's value)
 @
 @ Logic 47: propositional logic on the C47 / R47. Variables p q r s t u, the constants true and false,
 @ not, and, or, exclusive or, implies, if and only if, brackets. 5 evaluates the formula: TAUTOLOGY,

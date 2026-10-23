@@ -685,7 +685,8 @@ STO 42
 RTN
 REM ---- LBL :TABLE: key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font: the
 REM formula on top, then 2^n rows (up to 64: four columns of 16), each "1 0 1 | 1" (the variables in the order
-REM p..u, the first one changing slowest, all true first; then the formula's value), a header over each column.
+REM p..u, the first one changing slowest, all true first; then the formula's value Φ), a header over each column,
+REM BLOCK 1-4 under the columns (when there are more than one).
 REM Row k (2^n - 1 down to 0): the j-th variable used takes bit n - 1 - j of k; the bit of the word R24 to read is
 REM m = the sum of 2^code over the variables true in the row (code 0-5: p-u, bit i of row m is variable i).
 REM Any key goes back: the formula, the soft keys and the verdict drawn again. LBL / DSE / GTO loops (10 DO already).
@@ -721,7 +722,8 @@ X≥0?
 XEQ :TBU:
 DSE 44
 GTO :TBV:
-"| f"
+REM the formula's value: Φ (capital phi, the usual letter for a formula; the small font has it)
+"| Φ"
 x→α 34
 2
 RCL 40
@@ -817,6 +819,34 @@ ATEXT Z
 STO+ 48
 DSE 41
 GTO :TBR:
+REM under each block of 16 rows (5 or 6 variables: 2 or 4 blocks): " BLOCK 1" ... at row 32
+2
+RCL 40
+Y^X
+16
+÷
+STO 41
+1
+X≥Y?
+GTO :TBK:
+LBL :TBL:
+" BLOCK "
+STO 33
+RCL 41
+αIP 33
+RCL 33
+32
+RCL 41
+1
+-
+99
+×
+2
++
+ATEXT Z
+DSE 41
+GTO :TBL:
+LBL :TBK:
 "ANY KEY: BACK"
 4
 8

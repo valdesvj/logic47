@@ -41,11 +41,13 @@ LOGIC47 local labels: name (programs_rem/LOGIC47.txt), number (build/LOGIC47.txt
 :TBR:      38  each row: k = R41 - 1, its digits and m
 :TBB:      39  
 :TBF:      40  
-:TBW:      41  wait for a key (true: no key yet)
-:TBU:      42  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
-:TB1:      43  the formula is true in the row
-:TBH:      44  the header of the column of the place R48
-:SYNTAX:   45  the formula is not well formed
-:LABELS:   46  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
-:HINTS:    47  the keys (small font, row 26)
-:INIT:     48  the words, the symbols, the pages, the screen
+:TBL:      41  
+:TBK:      42  
+:TBW:      43  wait for a key (true: no key yet)
+:TBU:      44  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
+:TB1:      45  the formula is true in the row
+:TBH:      46  the header of the column of the place R48
+:SYNTAX:   47  the formula is not well formed
+:LABELS:   48  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
+:HINTS:    49  the keys (small font, row 26)
+:INIT:     50  the words, the symbols, the pages, the screen

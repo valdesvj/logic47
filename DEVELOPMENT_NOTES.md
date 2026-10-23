@@ -85,8 +85,11 @@
 - 1 413 steps for 8 rows, 16 029 for 64 (about 2.7 s on a C47). R-CLR now R20-R96.
 - The verdict's examples on two lines (T: row 60, F: row 40; the verdict at 100, the rows at 80): with six
   variables "T: p=0 ... u=0  F: ..." ran past the screen's width into the key hints.
-- Tests: the table of 8 formulas against the Python evaluator, key 6 ignored before 5, after a change and after a
-  syntax error. docs/LOGIC47_table3.png, LOGIC47_table6.png. 955 steps, about 3.4 KB; DO 10, IF 0.
+- Victor: the value column headed Φ (capital phi, the formula; was f, mixed up with F: false; the small font's φ
+  looks odd), and BLOCK 1-4 under the blocks of 16 rows (5 or 6 variables): the four headers read as four tables.
+- Tests: the table of 8 formulas against the Python evaluator (and its BLOCK labels), key 6 ignored before 5,
+  after a change and after a syntax error. docs/LOGIC47_table3.png, LOGIC47_table6.png. 982 steps, about 3.5 KB;
+  DO 10, IF 0.
 
 ## To do
 
