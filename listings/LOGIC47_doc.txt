@@ -716,7 +716,8 @@
  649  "∨"
  650  RTN
  651  LBL 85
- 652  "⊕"
+      ; exclusive or drawn as ⊻ (on the line as ∨): the font's ⊕ sits low, rows 10-20 of the cell
+ 652  "⊻"
  653  RTN
  654  LBL 86
  655  "→"

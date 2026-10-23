@@ -52,6 +52,12 @@
 - The firmware font's ⊤ (stdfont: 9 rows at the top of the 21-row cell, the transpose sign) looks like a
   superscript beside ⊥ (12 rows, on the line). LBL 80 now draws a plain "T" (soft key and formula).
 
+## Oct 23, 2026 - v0.1.4: exclusive or drawn as ⊻ (Victor: "the circle with plus is low in the bar")
+
+- The firmware font's ⊕ (stdfont: rows 10-20 of the cell, nothing below) sits lower than ∧ ∨ (rows 7-15) on the
+  soft keys and in the formula. LBL 85 now draws ⊻ (rows 7-19, as ∨ with a bar under it), the other usual sign
+  for exclusive or. The simulator and the tests still name it ⊕ when they type a formula.
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.
