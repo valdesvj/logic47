@@ -189,3 +189,6 @@ if __name__ == '__main__':
     print('%s %5d steps, %2d local labels, about %d bytes (.p47, estimated); IF %d, DO %d' % (
         NAME, len(st), sum(1 for s in st if re.match(r'LBL \d\d', s)), estimate(st),
         sum(1 for s in st if s.startswith('IF ')), sum(1 for s in st if s.startswith('DO '))))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import build_forum
+    build_forum.build(NAME)                                   # build/forum/LOGIC47.p47u, the commented rejig source

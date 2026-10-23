@@ -60,6 +60,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
 | `programs_rem/LOGIC47.txt` | the commented source (STRUCT, named labels) — edit this one |
 | `programs/LOGIC47.txt`, `build/LOGIC47.txt` | the calculator program (to convert with rejig) |
 | `listings/` | numbered steps with comments, the local labels |
+| `build/forum/LOGIC47.p47u` | the same program as a commented rejig source: an `@` header (Index, Author, Version, Source, Tested, Input, Output), the steps indented, the comments after `;` (rejig drops them: no memory); written by the build (`tools/build_forum.py`), checked by `tests/test_forum.py` |
 | `python/c47sim.py`, `stdfont.py`, `tinyfont.py` | the C47 simulator and fonts, from Almanac 47; the bitwise commands added here |
 | `python/logic47sim.py` | runs LOGIC47 in the simulator, writes `docs/*.png` |
 | `tests/test_logic47.py` | the tests |
@@ -67,6 +68,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
     python3 tools/build_logic47.py
     python3 tests/test_logic47.py    # 39 fixed cases (classics, precedence, syntax errors), 300+ random formulas,
                                      # each against a separate Python evaluator; delete, clear, the stack
+    python3 tests/test_forum.py      # the .p47u: the same steps as build/, no REM made of a comment
     python3 python/logic47sim.py     # docs/LOGIC47_*.png
     python3 tools/make_gif.py        # docs/LOGIC47_demo.gif
 

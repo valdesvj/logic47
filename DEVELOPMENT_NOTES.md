@@ -65,6 +65,14 @@
   (Oct 23): the stack and LASTx came back.
 - c47sim: STOS / RCLS copied from Almanac 47 (branch c47sim-stos-rcls). All tests OK. 757 steps (22 fewer).
 
+## Oct 24, 2026 - the commented rejig source build/forum/LOGIC47.p47u (Victor)
+
+- As Zones 47's build/forum: an '@' header, the steps of build/LOGIC47.txt indented (STRUCT), the source's REM lines
+  after ';' on the steps they stand before, label names on LBL / XEQ (-> :INIT:), notes on the tables (the
+  connectives LBL 68-73, the glyphs LBL 74-89). rejig drops what follows ';': the .p47 is that of build/LOGIC47.txt.
+  tools/build_forum.py, run at the end of tools/build_logic47.py; tests/test_forum.py. The source's header now
+  says v0.1.5 and the glyphs drawn (T, ⊻). Not yet checked with rejig: the two .p47 should be the same size.
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.

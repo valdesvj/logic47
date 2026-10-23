@@ -1,5 +1,5 @@
-      ; LOGIC47 v0.1.0 - Logic 47: propositional logic on the C47 / R47
-      ; A formula of up to six variables p q r s t u, the constants ⊤ ⊥, the connectives ¬ ∧ ∨ ⊕ → ↔ and brackets,
+      ; LOGIC47 v0.1.5 - Logic 47: propositional logic on the C47 / R47
+      ; A formula of up to six variables p q r s t u, the constants ⊤ ⊥ (drawn T ⊥), the connectives ¬ ∧ ∨ ⊕ (drawn ⊻) → ↔, brackets,
       ; keyed with the soft keys F1-F6 (three pages: 1 the variables, 2 the connectives, 3 the brackets and
       ; constants). 5 evaluates it: TAUTOLOGY, CONTRADICTION or CONTINGENCY, the number of rows where it is
       ; true, and for a contingency a row where it is true and one where it is false.
