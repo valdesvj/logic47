@@ -9,10 +9,10 @@ contingency, gives a row where it is true and one where it is false.
 ## The formula
 
 - Variables **p q r s t u** (up to six), constants **⊤** (true, shown as a plain `T`: the font's ⊤ is a small raised T) and **⊥** (false).
-- Connectives **¬** (not), **∧** (and), **∨** (or), **⊕** (exclusive or), **→** (implies), **↔** (if and
+- Connectives **¬** (not), **∧** (and), **∨** (or), **⊻** (exclusive or, also written ⊕), **→** (implies), **↔** (if and
   only if), and brackets.
-- Precedence, from the highest: ¬, ∧, ∨ and ⊕, →, ↔. So `p∨q∧r` is `p∨(q∧r)` and `¬p∧q` is `(¬p)∧q`.
-  → groups to the right (`p→q→r` = `p→(q→r)`); ∧ ∨ ⊕ ↔ to the left.
+- Precedence, from the highest: ¬, ∧, ∨ and ⊻, →, ↔. So `p∨q∧r` is `p∨(q∧r)` and `¬p∧q` is `(¬p)∧q`.
+  → groups to the right (`p→q→r` = `p→(q→r)`); ∧ ∨ ⊻ ↔ to the left.
 - Typed with the soft keys, symbol by symbol, shown with the real glyphs of the C47 font.
 
 ## Keys
@@ -21,7 +21,7 @@ contingency, gives a row where it is true and one where it is false.
 |---|---|
 | F1–F6 | a symbol of the page shown under the screen |
 | 1 | page 1: `p q r s t u` |
-| 2 | page 2: `¬ ∧ ∨ → ↔ ⊕` |
+| 2 | page 2: `¬ ∧ ∨ → ↔ ⊻` |
 | 3 | page 3: `( ) T ⊥` |
 | 4 | delete the last symbol |
 | 5 | evaluate |
@@ -46,7 +46,7 @@ is its value in row k:
     p = …10101010   q = …11001100   r = …11110000   s = …1111111100000000   …   u = 32 ones, 32 zeros
 
 The formula is evaluated **once** on these words (shunting-yard: values and operators on two stacks of
-registers), with `→` as `¬a ∨ b` and `↔` as `¬(a ⊕ b)`. The result word *is* the truth table: all ones a
+registers), with `→` as `¬a ∨ b` and `↔` as `¬(a ⊻ b)`. The result word *is* the truth table: all ones a
 tautology, all zeros a contradiction. `BS?` / `BC?` on each of its 64 bits count the true rows and find the
 example rows. A variable not in the formula only repeats rows, so the count is divided by 2^(6 − n).
 

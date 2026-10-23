@@ -716,7 +716,8 @@ LBL 84
 "∨"
 RTN
 LBL 85
-"⊕"
+REM exclusive or drawn as ⊻ (on the line as ∨): the font's ⊕ sits low, rows 10-20 of the cell
+"⊻"
 RTN
 LBL 86
 "→"
