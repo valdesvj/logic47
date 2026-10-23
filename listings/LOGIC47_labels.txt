@@ -37,6 +37,6 @@ LOGIC47 local labels: name (programs_rem/LOGIC47.txt), number (build/LOGIC47.txt
 :VAR:      34  "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
 :ONE:      35  
 :SYNTAX:   36  the formula is not well formed
-:LABELS:   37  the six soft-key labels of the page R20 (rows 0-19, one per 66 columns)
+:LABELS:   37  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
 :HINTS:    38  the keys (small font, row 26)
 :INIT:     39  the words, the symbols, the pages, the screen

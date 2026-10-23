@@ -37,6 +37,16 @@
 - tests/test_logic47.py checks that every αPOS / αSL / αLEFT of a run sees ASCII texts only (it fails on
   v0.1.0). All tests OK. 774 steps, about 2.9 KB; R20-R95 cleared at the end.
 
+## Oct 23, 2026 - v0.1.2: key 3 (Victor: "pushing 3 is giving error" on his C47)
+
+- Key 3 shows page 3, `( ) ⊤ ⊥`: four symbols, but LBL :LABELS: always drew six soft-key labels, and for the
+  5th and 6th it ran αSL / αLEFT past the end of the page's text "opgh": an error on the C47. c47sim returned an
+  empty text and went on, so the simulator and the tests could not show it.
+- Now the loop runs over the page's length (αPOS of a "|" put at its end): six labels on pages 1 and 2, four on
+  page 3. F5 / F6 on page 3 already did nothing.
+- tests/test_logic47.py: the text check now also fails when αSL / αLEFT go past the end of a text, and presses
+  1 2 3 and F5 F6 on page 3 (it fails on v0.1.1). All tests OK. 779 steps, about 2.9 KB.
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.

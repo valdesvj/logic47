@@ -134,7 +134,9 @@ def rand_formula(rng, depth, vs):
 
 def ascii_only():
     """Every αPOS / αSL / αLEFT of a run works on ASCII texts only (the register and the text searched for): on
-    the C47 a glyph such as ¬ may take two bytes, and these commands would then not count it as one character."""
+    the C47 a glyph such as ¬ may take two bytes, and these commands would then not count it as one character.
+    And αSL / αLEFT never go past the end of the text (an error on the C47; c47sim lets it pass): the pages
+    1 2 3 shown, F5 F6 on page 3 (no symbol there)."""
     shots, texts, c = None, None, None
     import c47sim
     bad = []
@@ -147,13 +149,15 @@ def ascii_only():
             for t in (v, x if op == 'αPOS' else ''):
                 if isinstance(t, str) and not t.isascii():
                     bad.append((ln, t))
+            if op in ('αSL', 'αLEFT') and isinstance(v, str) and int(x) > len(v):
+                bad.append((ln, 'past the end: %s of "%s"' % (int(x), v)))     # an error on the C47
     cls.count = hook
     try:
         for f in ('((p→q)∧(q→r))→(p→r)', '¬(p⊕q)↔(r∨⊤)∧⊥', 'p∧∨q', '(s→t)∧u'):
-            L.run(L.keys(f) + [L.DEL] + L.keys(f[-1], True) + [L.END])
+            L.run(L.keys(f) + [L.DEL] + L.keys(f[-1], True) + [74, 73, 72, 74, 15, 16, L.END])
     finally:
         del cls.count
-    check(not bad, 'αPOS / αSL / αLEFT on a non-ASCII text: %s' % bad[:3])
+    check(not bad, 'αPOS / αSL / αLEFT on a non-ASCII text, or past its end: %s' % bad[:3])
 
 
 def main():
