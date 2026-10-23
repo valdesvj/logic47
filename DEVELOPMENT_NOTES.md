@@ -47,6 +47,11 @@
 - tests/test_logic47.py: the text check now also fails when αSL / αLEFT go past the end of a text, and presses
   1 2 3 and F5 F6 on page 3 (it fails on v0.1.1). All tests OK. 779 steps, about 2.9 KB.
 
+## Oct 23, 2026 - v0.1.3: true shown as T (Victor: "the T is like superindex")
+
+- The firmware font's ⊤ (stdfont: 9 rows at the top of the 21-row cell, the transpose sign) looks like a
+  superscript beside ⊥ (12 rows, on the line). LBL 80 now draws a plain "T" (soft key and formula).
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.

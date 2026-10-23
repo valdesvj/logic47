@@ -8,7 +8,7 @@ contingency, gives a row where it is true and one where it is false.
 
 ## The formula
 
-- Variables **p q r s t u** (up to six), constants **⊤** (true) and **⊥** (false).
+- Variables **p q r s t u** (up to six), constants **⊤** (true, shown as a plain `T`: the font's ⊤ is a small raised T) and **⊥** (false).
 - Connectives **¬** (not), **∧** (and), **∨** (or), **⊕** (exclusive or), **→** (implies), **↔** (if and
   only if), and brackets.
 - Precedence, from the highest: ¬, ∧, ∨ and ⊕, →, ↔. So `p∨q∧r` is `p∨(q∧r)` and `¬p∧q` is `(¬p)∧q`.
@@ -22,7 +22,7 @@ contingency, gives a row where it is true and one where it is false.
 | F1–F6 | a symbol of the page shown under the screen |
 | 1 | page 1: `p q r s t u` |
 | 2 | page 2: `¬ ∧ ∨ → ↔ ⊕` |
-| 3 | page 3: `( ) ⊤ ⊥` |
+| 3 | page 3: `( ) T ⊥` |
 | 4 | delete the last symbol |
 | 5 | evaluate |
 | 7 | clear the formula |

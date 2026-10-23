@@ -700,7 +700,8 @@ LBL 79
 "u"
 RTN
 LBL 80
-"⊤"
+REM true drawn as a plain T: the font's ⊤ is the small raised transpose T
+"T"
 RTN
 LBL 81
 "⊥"

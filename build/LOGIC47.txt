@@ -634,7 +634,7 @@ LBL 79
 "u"
 RTN
 LBL 80
-"⊤"
+"T"
 RTN
 LBL 81
 "⊥"
