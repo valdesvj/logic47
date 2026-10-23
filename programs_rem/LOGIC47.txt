@@ -744,7 +744,7 @@ GRMOD
 6
 ATEXT Z
 RTN
-REM ---- LBL :LABELS: the six soft-key labels of the page R20 (rows 0-19, one per 66 columns) ----
+REM ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
 LBL :LABELS:
 REM the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
 1
@@ -763,12 +763,19 @@ RCL 20
 STO 40
 RCL IND 40
 STO 41
-6
+REM as many labels as the page has symbols (page 3: four): its length, the place of a "|" put at its end
+REM (αSL / αLEFT past the end of a text is an error on the C47); R45 the length, R44 counts down
+STO 42
+"|"
+x→α 42
+"|"
+αPOS 42
+STO 45
 STO 44
 DO
   RCL 41
   STO 42
-  6
+  RCL 45
   RCL 44
   -
   STO 43
