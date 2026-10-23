@@ -132,7 +132,33 @@ def rand_formula(rng, depth, vs):
     return wrap(a) + op + wrap(b)
 
 
+def ascii_only():
+    """Every αPOS / αSL / αLEFT of a run works on ASCII texts only (the register and the text searched for): on
+    the C47 a glyph such as ¬ may take two bytes, and these commands would then not count it as one character."""
+    shots, texts, c = None, None, None
+    import c47sim
+    bad = []
+    cls = type(c47sim.load([L.PROG]))
+
+    def hook(self, op, x):
+        if op in ('αPOS', 'αSL', 'αLEFT'):
+            ln = self.lines[self.at]; reg = ln.split(' ', 1)[1]
+            v = self.rget(self.regkey(reg))
+            for t in (v, x if op == 'αPOS' else ''):
+                if isinstance(t, str) and not t.isascii():
+                    bad.append((ln, t))
+    cls.count = hook
+    try:
+        for f in ('((p→q)∧(q→r))→(p→r)', '¬(p⊕q)↔(r∨⊤)∧⊥', 'p∧∨q', '(s→t)∧u'):
+            L.run(L.keys(f) + [L.DEL] + L.keys(f[-1], True) + [L.END])
+    finally:
+        del cls.count
+    check(not bad, 'αPOS / αSL / αLEFT on a non-ASCII text: %s' % bad[:3])
+
+
 def main():
+    ascii_only()
+    print('the text commands: ASCII only')
     cases = [
         # the classics
         'p∨¬p', 'p∧¬p', 'p→p', '((p→q)∧p)→q', '((p→q)∧¬q)→¬p', '((p→q)∧(q→r))→(p→r)',
@@ -160,10 +186,10 @@ def main():
     check(got(texts) == expect('p∨¬p'), 'delete: %s' % got(texts))
     shots, texts, c = L.run(L.keys('p∨q', False) + [L.CLEAR] + L.keys('p∧¬p'))
     check(got(texts) == expect('p∧¬p'), 'clear: %s' % got(texts))
-    # the stack kept, R20-R92 cleared, GRMOD 0, GRFNT 20 at the end
+    # the stack kept, R20-R95 cleared, GRMOD 0, GRFNT 20 at the end
     shots, texts, c = L.run(L.keys('p→q') + [L.END], stack=(1, 2, 3, 4))
     check([int(v) for v in c.s[:4]] == [1, 2, 3, 4], 'stack: %s' % c.s[:4])
-    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 92 and v not in (0, '', D(0))]
+    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 95 and v not in (0, '', D(0))]
     check(not left, 'registers left: %s' % left)
     check(getattr(c, 'grmod', 0) == 0 and getattr(c, 'grfnt', 20) == 20, 'GRMOD 0, GRFNT 20 at the end')
     print('ALL OK' if not FAIL else '%d FAILED' % len(FAIL))

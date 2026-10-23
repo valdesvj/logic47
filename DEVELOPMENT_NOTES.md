@@ -25,6 +25,18 @@
   random formulas of 1-6 variables, delete and clear, the stack: all against a separate recursive-descent
   evaluator. ALL OK.
 
+## Oct 23, 2026 - v0.1.1: the formula kept in ASCII (Victor: "fails for p and not q" on his C47)
+
+- In the simulator p∧¬q was right (contingency, 1 of 4). The likely cause on the C47: v0.1.0 used αPOS, αSL and
+  αLEFT on texts with the glyphs ¬ ∧ ∨ ⊕ → ↔ ⊤ ⊥ (the formula, the symbol table, the pages); in the firmware's
+  strings such a glyph may take two bytes, and these commands would then not count it as one character, so the
+  codes after the first glyph shift. c47sim counts Python characters and could not show it.
+- Now the formula is kept as ASCII letters a-p (the codes 0-15), the pages and the table too; the glyphs are
+  only drawn (LBL 74-89: one per code), the formula's glyph text rebuilt in LBL :SHOWF: (a LBL / DSE / GTO
+  loop: the program has the original DM42's 10 DO already). Variables' names from "pqrstu" (ASCII).
+- tests/test_logic47.py checks that every αPOS / αSL / αLEFT of a run sees ASCII texts only (it fails on
+  v0.1.0). All tests OK. 774 steps, about 2.9 KB; R20-R95 cleared at the end.
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.

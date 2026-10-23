@@ -70,7 +70,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
     python3 python/logic47sim.py     # docs/LOGIC47_*.png
     python3 tools/make_gif.py        # docs/LOGIC47_demo.gif
 
-Size: 693 steps, about 2.7 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
+Size: 774 steps, about 2.9 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
 Calculators: C47 / R47 with STRUCT, ATEXT and GRFNT (firmware 00.109.05.00a0.ALPHA or later, as Elements 47).
 **Not yet run on a real C47**: the bitwise commands (`AND OR XOR NOT BS? BC?`) are new to these projects and
 need a first try.

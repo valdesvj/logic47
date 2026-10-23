@@ -9,13 +9,15 @@ REM XOR and NOT gives the word of its 64 rows. A variable not in the formula onl
 REM 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
 REM Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
 REM Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
-REM The user's stack and LASTx are kept; at the end R20-R92 are cleared, WSIZE stays 64.
+REM The user's stack and LASTx are kept; at the end R20-R95 are cleared, WSIZE stays 64.
 REM Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
 REM Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
 REM R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
 REM R34 the text, R35 the value stack pointer (values R50-R69), R36 the operator stack pointer (R70-R89),
-REM R37 1: syntax error, R38 the code, R39-R45 work, R46 the symbols "pqrstu⊤⊥¬∧∨⊕→↔()" (code = place),
-REM R47 the true rows, R48 a true row, R49 a false row, R90-R92 the pages' symbols.
+REM R37 1: syntax error, R38 the code, R39-R45 work, R46 the code letters "abcdefghijklmnop" (code = place),
+REM R47 the true rows, R48 a true row, R49 a false row, R90-R92 the pages' code letters, R93 the variables'
+REM names, R94-R95 the formula's glyphs. R21 holds ">" and the code letters (ASCII), not the glyphs: on the C47 a
+REM glyph such as ¬ may take two bytes, and αPOS, αSL, αLEFT would then not count it as one character.
 REM Control flow in the C47 STRUCT commands (IF / ELSE / ENDIF, DO / WHILE / ENDDO), indented two spaces per
 REM level; tools/build_logic47.py checks them and numbers them.
 LBL "LOGIC47"
@@ -80,8 +82,8 @@ WHILE
   X=Y?
   XEQ :CLEAR:
 ENDDO
-REM ---- 0: the end: R20-R92 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
-20.73
+REM ---- 0: the end: R20-R95 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.76
 R-CLR
 0
 GRMOD
@@ -178,7 +180,35 @@ GRFNT
 ATEXT Z
 21
 GRFNT
+REM the glyphs: ">" then each code's glyph (LBL 74 + code), in R95; R94 the place (a LBL / DSE / GTO loop:
+REM the program has already the 10 DO of the original DM42)
+">"
+STO 95
+RCL 22
+X=0?
+GTO :SHOW2:
+STO 94
+LBL :SHOW1:
 RCL 21
+STO 41
+RCL 22
+RCL 94
+-
+1
++
+αSL 41
+1
+αLEFT 41
+αPOS 46
+74
++
+STO 41
+XEQ IND 41
+x→α 95
+DSE 94
+GTO :SHOW1:
+LBL :SHOW2:
+RCL 95
 200
 6
 ATEXT Z
@@ -624,7 +654,7 @@ ENDDO
 RTN
 REM LBL :VAR: "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
 LBL :VAR:
-RCL 46
+RCL 93
 STO 42
 6
 RCL 44
@@ -649,6 +679,55 @@ RTN
 LBL :ONE:
 "=1 "
 STO 42
+RTN
+REM ---- LBL 74-89: the glyph of the code 0-15 ----
+LBL 74
+"p"
+RTN
+LBL 75
+"q"
+RTN
+LBL 76
+"r"
+RTN
+LBL 77
+"s"
+RTN
+LBL 78
+"t"
+RTN
+LBL 79
+"u"
+RTN
+LBL 80
+"⊤"
+RTN
+LBL 81
+"⊥"
+RTN
+LBL 82
+"¬"
+RTN
+LBL 83
+"∧"
+RTN
+LBL 84
+"∨"
+RTN
+LBL 85
+"⊕"
+RTN
+LBL 86
+"→"
+RTN
+LBL 87
+"↔"
+RTN
+LBL 88
+"("
+RTN
+LBL 89
+")"
 RTN
 REM LBL :SYNTAX: the formula is not well formed
 LBL :SYNTAX:
@@ -696,6 +775,11 @@ DO
   αSL 42
   1
   αLEFT 42
+  αPOS 46
+  74
+  +
+  STO 42
+  XEQ IND 42
   0
   RCL 43
   66
@@ -740,14 +824,18 @@ STO 30
 STO 31
 0#2
 STO 32
-"pqrstu⊤⊥¬∧∨⊕→↔()"
+REM the formula is kept as letters a-p (the codes 0-15: p q r s t u ⊤ ⊥ ¬ ∧ ∨ ⊕ → ↔ ( )), plain ASCII, so
+REM αPOS, αSL and αLEFT count one character each; the glyphs only for the screen (LBL 74 + code)
+"abcdefghijklmnop"
 STO 46
-"pqrstu"
+"abcdef"
 STO 90
-"¬∧∨→↔⊕"
+"ijkmnl"
 STO 91
-"()⊤⊥"
+"opgh"
 STO 92
+"pqrstu"
+STO 93
 1
 STO 20
 ">"
