@@ -21,24 +21,9 @@ REM glyph such as ¬ may take two bytes, and αPOS, αSL, αLEFT would then not 
 REM Control flow in the C47 STRUCT commands (IF / ELSE / ENDIF, DO / WHILE / ENDDO), indented two spaces per
 REM level; tools/build_logic47.py checks them and numbers them.
 LBL "LOGIC47"
-REM the user's stack in the local registers (as ELEM47 v1.2.0): X..T, A..D with R↓, then LASTx
-LocR 10
-STO R.00
-R↓
-STO R.01
-R↓
-STO R.02
-R↓
-STO R.03
-R↓
-STO R.04
-R↓
-STO R.05
-R↓
-STO R.06
-R↓
-STO R.07
-R↓
+REM the user's stack in the local registers: STOS R.00 (R.00-R.07, the 8 levels), then LASTx in R.08
+LocR 9
+STOS R.00
 LASTx
 STO R.08
 XEQ :INIT:
@@ -92,14 +77,7 @@ GRFNT
 CLLCD
 RCL R.08
 STO L
-RCL R.07
-RCL R.06
-RCL R.05
-RCL R.04
-RCL R.03
-RCL R.02
-RCL R.01
-RCL R.00
+RCLS R.00
 RTN
 REM ---- LBL :FKEY: F1-F6 (key 11-16; other keys below 17: nothing): the symbol n of the page appended ----
 LBL :FKEY:
