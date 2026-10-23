@@ -65,6 +65,32 @@
   (Oct 23): the stack and LASTx came back.
 - c47sim: STOS / RCLS copied from Almanac 47 (branch c47sim-stos-rcls). All tests OK. 757 steps (22 fewer).
 
+## Oct 24, 2026 - the commented rejig source build/forum/LOGIC47.p47u (Victor)
+
+- As Zones 47's build/forum: an '@' header, the steps of build/LOGIC47.txt indented (STRUCT), the source's REM lines
+  after ';' on the steps they stand before, label names on LBL / XEQ (-> :INIT:), notes on the tables (the
+  connectives LBL 68-73, the glyphs LBL 74-89). rejig drops what follows ';': the .p47 is that of build/LOGIC47.txt.
+  tools/build_forum.py, run at the end of tools/build_logic47.py; tests/test_forum.py. The source's header now
+  says v0.1.5 and the glyphs drawn (T, ⊻). Not yet checked with rejig: the two .p47 should be the same size.
+
+## Oct 24, 2026 - v0.2.0: the truth table, key 6 (Victor)
+
+- 64 rows fit on one screen in the small font (GRFNT 10: 6 columns a character, 9 rows a line): four columns of
+  16 rows, each " 1 0 1 1 0 1 | 1" (90 columns) at x 2 + 99 c, a header " p q r s t u | f" over each; the formula on top.
+- LBL :TABLE: only after a verdict (R96 = 1; 0 after F1-F6, delete, clear, a syntax error). The variables used in
+  order p..u (their code letters in R47); row k = 2^n - 1 down to 0, the j-th variable used = bit n - 1 - j of k
+  (the first one changing slowest, all true first, as in the books); the word's bit m = sum of 2^code of the true
+  ones, read with BS? IND. LBL / DSE / GTO loops (the 10 DO are used), the key wait LBL / PAUSE 50 / KEY? / GTO.
+  Back: the soft keys, the formula and the verdict drawn again.
+- 1 413 steps for 8 rows, 16 029 for 64 (about 2.7 s on a C47). R-CLR now R20-R96.
+- The verdict's examples on two lines (T: row 60, F: row 40; the verdict at 100, the rows at 80): with six
+  variables "T: p=0 ... u=0  F: ..." ran past the screen's width into the key hints.
+- Victor: the value column headed Φ (capital phi, the formula; was f, mixed up with F: false; the small font's φ
+  looks odd), and BLOCK 1-4 under the blocks of 16 rows (5 or 6 variables): the four headers read as four tables.
+- Tests: the table of 8 formulas against the Python evaluator (and its BLOCK labels), key 6 ignored before 5,
+  after a change and after a syntax error. docs/LOGIC47_table3.png, LOGIC47_table6.png. 982 steps, about 3.5 KB;
+  DO 10, IF 0.
+
 ## To do
 
 1. Run on Victor's C47: the bitwise commands first.

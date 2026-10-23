@@ -36,7 +36,18 @@ LOGIC47 local labels: name (programs_rem/LOGIC47.txt), number (build/LOGIC47.txt
 :ROW:      33  the values of the variables used in row X: "p=1 q=0 " appended to R34
 :VAR:      34  "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
 :ONE:      35  
-:SYNTAX:   36  the formula is not well formed
-:LABELS:   37  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
-:HINTS:    38  the keys (small font, row 26)
-:INIT:     39  the words, the symbols, the pages, the screen
+:TABLE:    36  key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font:
+:TBV:      37  
+:TBR:      38  each row: k = R41 - 1, its digits and m
+:TBB:      39  
+:TBF:      40  
+:TBL:      41  
+:TBK:      42  
+:TBW:      43  wait for a key (true: no key yet)
+:TBU:      44  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
+:TB1:      45  the formula is true in the row
+:TBH:      46  the header of the column of the place R48
+:SYNTAX:   47  the formula is not well formed
+:LABELS:   48  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
+:HINTS:    49  the keys (small font, row 26)
+:INIT:     50  the words, the symbols, the pages, the screen

@@ -25,6 +25,7 @@ contingency, gives a row where it is true and one where it is false.
 | 3 | page 3: `( ) T ⊥` |
 | 4 | delete the last symbol |
 | 5 | evaluate |
+| 6 | the truth table of the formula just evaluated (any key goes back) |
 | 7 | clear the formula |
 | 0 | the end: the screen cleared, your stack and LASTx as they were |
 
@@ -37,6 +38,17 @@ contingency, gives a row where it is true and one where it is false.
     SYNTAX ERROR         (a missing operand or bracket, two operands side by side...)
 
 The rows are those of the variables in the formula: 2ⁿ for n variables.
+
+## The truth table (key 6)
+
+After 5, key 6 shows the table in the small font: a column for each variable used (p first, changing slowest),
+the formula's value `Φ` last (1 true, 0 false), from all true down to all false; up to 64 rows on one screen, in
+blocks of 16 side by side (BLOCK 1-4 under them: read block 1 down, then block 2 ...). Any key goes back to the
+formula and the verdict.
+
+![LOGIC47 truth table](docs/LOGIC47_table6.png)
+
+About 1 400 steps for 8 rows and 16 000 for 64 (about 3 s on a C47 at 0.17 ms a step).
 
 ## How: the whole truth table at once
 
@@ -60,6 +72,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
 | `programs_rem/LOGIC47.txt` | the commented source (STRUCT, named labels) — edit this one |
 | `programs/LOGIC47.txt`, `build/LOGIC47.txt` | the calculator program (to convert with rejig) |
 | `listings/` | numbered steps with comments, the local labels |
+| `build/forum/LOGIC47.p47u` | the same program as a commented rejig source: an `@` header (Index, Author, Version, Source, Tested, Input, Output), the steps indented, the comments after `;` (rejig drops them: no memory); written by the build (`tools/build_forum.py`), checked by `tests/test_forum.py` |
 | `python/c47sim.py`, `stdfont.py`, `tinyfont.py` | the C47 simulator and fonts, from Almanac 47; the bitwise commands added here |
 | `python/logic47sim.py` | runs LOGIC47 in the simulator, writes `docs/*.png` |
 | `tests/test_logic47.py` | the tests |
@@ -67,10 +80,11 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
     python3 tools/build_logic47.py
     python3 tests/test_logic47.py    # 39 fixed cases (classics, precedence, syntax errors), 300+ random formulas,
                                      # each against a separate Python evaluator; delete, clear, the stack
+    python3 tests/test_forum.py      # the .p47u: the same steps as build/, no REM made of a comment
     python3 python/logic47sim.py     # docs/LOGIC47_*.png
     python3 tools/make_gif.py        # docs/LOGIC47_demo.gif
 
-Size: 757 steps, about 2.8 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
+Size: 982 steps, about 3.5 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
 Calculators: C47 / R47 with STRUCT, ATEXT and GRFNT (firmware 00.109.05.00a0.ALPHA or later, as Elements 47).
 **Not yet run on a real C47**: the bitwise commands (`AND OR XOR NOT BS? BC?`) are new to these projects and
 need a first try.
