@@ -23,7 +23,7 @@ SOURCE = 'https://github.com/valdesvj/logic47'
 COL = 32                              # the column of the ';' comments (wider steps: two spaces after them)
 
 HEAD = {
-    'LOGIC47': """@ Index:   Propositional logic: tautology, contradiction or contingency (the whole truth table at once)
+    'LOGIC47': """@ Index:   Propositional logic: tautology, contradiction or contingency, and the truth table
 @ Author:  %(author)s
 @ Version: %(version)s
 @ Source:  %(source)s
@@ -31,15 +31,17 @@ HEAD = {
 @ Tested:  C47 simulator (python/c47sim.py): tests/test_logic47.py, 39 fixed formulas and 317 random ones of
 @ Tested:  1-6 variables against a separate Python evaluator
 @ Input:   the formula, keyed with F1-F6 on three pages (1 p q r s t u, 2 the connectives, 3 ( ) T F)
-@ Output:  p->q (keys F1, 2 F4, 1 F2, 5): CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0  F: p=1 q=0
+@ Output:  p->q (keys F1, 2 F4, 1 F2, 5): CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0, F: p=1 q=0;
+@ Output:  then 6: the table p q | f: 1 1 | 1, 1 0 | 0, 0 1 | 1, 0 0 | 1
 @
 @ Logic 47: propositional logic on the C47 / R47. Variables p q r s t u, the constants true and false,
 @ not, and, or, exclusive or, implies, if and only if, brackets. 5 evaluates the formula: TAUTOLOGY,
 @ CONTRADICTION or CONTINGENCY, the number of true rows, and for a contingency a true and a false row.
 @ Each variable is a 64-bit word (one bit a row), so the formula is evaluated once with AND OR XOR NOT.
 @
-@ Keys: F1-F6 a symbol, 1 2 3 the page, 4 delete, 5 evaluate, 7 clear, 0 the end.
-@ Your stack and LASTx are kept (STOS / RCLS in local registers); the registers R20-R95 are cleared at the end.
+@ Keys: F1-F6 a symbol, 1 2 3 the page, 4 delete, 5 evaluate, 6 the truth table (after 5; up to 64 rows on one
+@ screen, any key back), 7 clear, 0 the end.
+@ Your stack and LASTx are kept (STOS / RCLS in local registers); the registers R20-R96 are cleared at the end.
 @ Needs a C47 / R47 firmware with ATEXT, GRFNT, the STRUCT commands and the bitwise commands (WSIZE 64).
 @ The comments after ';' say what each part does (rejig drops them: they take no memory).
 @

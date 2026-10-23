@@ -103,7 +103,7 @@ def expect(f):
     if verdict == 'CONTINGENCY':
         kt, kf = vals.index(True), vals.index(False)
         row = lambda k: ''.join('%s=%d ' % (c, k >> VARS.index(c) & 1) for c in used)
-        out.append('T: ' + row(kt) + '  F: ' + row(kf))
+        out += ['T: ' + row(kt), 'F: ' + row(kf)]
     return out
 
 
@@ -130,6 +130,27 @@ def rand_formula(rng, depth, vs):
     a, b = rand_formula(rng, depth - 1, vs), rand_formula(rng, depth - 1, vs)
     wrap = lambda s: '(' + s + ')' if len(s) > 1 and rng.random() < 0.7 else s
     return wrap(a) + op + wrap(b)
+
+
+def table(f):
+    """Key 6 after 5: the truth table (small font): a header ' p q | f' over each column of 16, then the rows from
+    all true down to all false (the first variable changing slowest), the formula's value last."""
+    shots, texts, c = L.run(L.keys(f) + [L.TABLE, L.EVAL, L.END])
+    small = [t for g, t in texts if g == 10]
+    i = max(k for k, t in enumerate(small) if t.startswith(' ') and t.rstrip().endswith('| f'))
+    while i > 0 and small[i - 1].startswith(' ') and '|' in small[i - 1] and small[i - 1] != 'ANY KEY: BACK':
+        i -= 1
+    got_ = small[i:small.index('ANY KEY: BACK', i)]
+    e = parse(f); used = [v for v in VARS if v in f]; n = len(used)
+    head = ' ' + ''.join(v + ' ' for v in used) + '| f'
+    want = []
+    for j, k in enumerate(range(2 ** n - 1, -1, -1)):
+        if j % 16 == 0:
+            want.append(head)
+        bits = [k >> (n - 1 - a) & 1 for a in range(n)]
+        row = {v: False for v in VARS}; row.update({v: bool(b) for v, b in zip(used, bits)})
+        want.append(' ' + ''.join('%d ' % b for b in bits) + '| %d' % e(row))
+    check(got_ == want, 'table %s: %s / %s' % (f, got_[:4], want[:4]))
 
 
 def ascii_only():
@@ -185,15 +206,23 @@ def main():
             continue
         one(f); n += 1
     print('%d random formulas' % n)
+    for f in ('p', 'p→q', '(p∨q)∧¬r', '¬(p∧q)↔(¬p∨¬q)', 'q⊕s', '(p→q)∧(r↔s)∨(t⊕u)', '⊤∨⊥', 'p∧t∨¬u'):
+        table(f)
+    print('the truth tables (key 6)')
+    # key 6 does nothing before 5, after a change of the formula, or after a syntax error
+    for ks, what in ((L.keys('p∧q', False) + [L.TABLE], 'before 5'), (L.keys('p∧q') + L.keys('∨', False) + [L.TABLE], 'after a change'),
+                     (L.keys('p∧∨q') + [L.TABLE], 'after a syntax error')):
+        shots, texts, c = L.run(ks + [L.END])
+        check('ANY KEY: BACK' not in [t for g, t in texts], 'key 6 %s: no table' % what)
     # 4 deletes the last symbol, 7 clears: "p∧q" then 4 4 "∨¬p" -> p∨¬p; 7 then "p∧¬p"
     shots, texts, c = L.run(L.keys('p∧q', False) + [L.DEL, L.DEL] + L.keys('∨¬p'))
     check(got(texts) == expect('p∨¬p'), 'delete: %s' % got(texts))
     shots, texts, c = L.run(L.keys('p∨q', False) + [L.CLEAR] + L.keys('p∧¬p'))
     check(got(texts) == expect('p∧¬p'), 'clear: %s' % got(texts))
-    # the stack kept, R20-R95 cleared, GRMOD 0, GRFNT 20 at the end
+    # the stack kept, R20-R96 cleared, GRMOD 0, GRFNT 20 at the end
     shots, texts, c = L.run(L.keys('p→q') + [L.END], stack=(1, 2, 3, 4))
     check([int(v) for v in c.s[:4]] == [1, 2, 3, 4], 'stack: %s' % c.s[:4])
-    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 95 and v not in (0, '', D(0))]
+    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 96 and v not in (0, '', D(0))]
     check(not left, 'registers left: %s' % left)
     check(getattr(c, 'grmod', 0) == 0 and getattr(c, 'grfnt', 20) == 20, 'GRMOD 0, GRFNT 20 at the end')
     print('ALL OK' if not FAIL else '%d FAILED' % len(FAIL))

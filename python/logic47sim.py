@@ -17,7 +17,7 @@ W, H = 400, 240
 LCD_BG, LCD_ON = (199, 205, 186), (34, 38, 30)
 PAGES = ('pqrstu', '¬∧∨→↔⊕', '()⊤⊥')
 PAGEKEY = (72, 73, 74)                                    # the keys 1 2 3
-DEL, EVAL, CLEAR, END = 62, 63, 52, 82                    # 4 5 7 0
+DEL, EVAL, TABLE, CLEAR, END = 62, 63, 64, 52, 82         # 4 5 6 7 0
 
 
 def keys(formula, evaluate=True):
@@ -76,6 +76,7 @@ def png(fn, pix, scale=3, border=12):
 
 SHOTS = [('LOGIC47_tautology.png', '((p→q)∧(q→r))→(p→r)'), ('LOGIC47_contingency.png', '(p∨q)∧¬r'),
          ('LOGIC47_contradiction.png', 'p∧¬p'), ('LOGIC47_syntax.png', 'p∧∨q')]
+TABLES = [('LOGIC47_table3.png', '(p∨q)∧¬r'), ('LOGIC47_table6.png', '(p→q)∧(r↔s)∨(t⊕u)')]
 
 
 if __name__ == '__main__':
@@ -85,3 +86,7 @@ if __name__ == '__main__':
         png(os.path.join(ROOT, 'docs', fn), shots[-1])
         print('docs/%-26s %-24s %s  (evaluation %d steps)' % (fn, f, [t for g, t in texts if g == 21][-3:],
                                                            c.at_steps[-1] - c.at_steps[-2]))
+    for fn, f in TABLES:                                  # key 6: the truth table (the screen before the key back)
+        shots, texts, c = run(keys(f) + [TABLE, EVAL, END])
+        png(os.path.join(ROOT, 'docs', fn), shots[-2])
+        print('docs/%-26s %-24s (the table %d steps)' % (fn, f, c.at_steps[-2] - c.at_steps[-3]))

@@ -1,4 +1,4 @@
-REM LOGIC47 v0.1.5 - Logic 47: propositional logic on the C47 / R47
+REM LOGIC47 v0.2.0 - Logic 47: propositional logic on the C47 / R47
 REM A formula of up to six variables p q r s t u, the constants ⊤ ⊥ (drawn T ⊥), the connectives ¬ ∧ ∨ ⊕ (drawn ⊻) → ↔, brackets,
 REM keyed with the soft keys F1-F6 (three pages: 1 the variables, 2 the connectives, 3 the brackets and
 REM constants). 5 evaluates it: TAUTOLOGY, CONTRADICTION or CONTINGENCY, the number of rows where it is
@@ -9,15 +9,16 @@ REM XOR and NOT gives the word of its 64 rows. A variable not in the formula onl
 REM 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
 REM Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
 REM Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
-REM The user's stack and LASTx are kept; at the end R20-R95 are cleared, WSIZE stays 64.
+REM The user's stack and LASTx are kept; at the end R20-R96 are cleared, WSIZE stays 64.
 REM Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
 REM Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
 REM R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
 REM R34 the text, R35 the value stack pointer (values R50-R69), R36 the operator stack pointer (R70-R89),
 REM R37 1: syntax error, R38 the code, R39-R45 work, R46 the code letters "abcdefghijklmnop" (code = place),
 REM R47 the true rows, R48 a true row, R49 a false row, R90-R92 the pages' code letters, R93 the variables'
-REM names, R94-R95 the formula's glyphs. R21 holds ">" and the code letters (ASCII), not the glyphs: on the C47 a
-REM glyph such as ¬ may take two bytes, and αPOS, αSL, αLEFT would then not count it as one character.
+REM names, R94-R95 the formula's glyphs, R96 1: a result to show as a table (key 6). R21 holds ">" and the code
+REM letters (ASCII), not the glyphs: on the C47 a glyph such as ¬ may take two bytes, and αPOS, αSL, αLEFT would
+REM then not count it as one character.
 REM Control flow in the C47 STRUCT commands (IF / ELSE / ENDIF, DO / WHILE / ENDDO), indented two spaces per
 REM level; tools/build_logic47.py checks them and numbers them.
 LBL "LOGIC47"
@@ -27,7 +28,8 @@ STOS R.00
 LASTx
 STO R.08
 XEQ :INIT:
-REM ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 7 (52) clear, 0 end ----
+REM ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
+REM 7 (52) clear, 0 end ----
 DO
   DO
     PAUSE 50
@@ -66,9 +68,13 @@ WHILE
   52
   X=Y?
   XEQ :CLEAR:
+  RCL 23
+  64
+  X=Y?
+  XEQ :TABLE:
 ENDDO
-REM ---- 0: the end: R20-R95 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
-20.76
+REM ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.77
 R-CLR
 0
 GRMOD
@@ -101,6 +107,9 @@ x→α 41
 RCL 39
 X>Y?
 RTN
+REM the formula changes: no table until it is evaluated again
+0
+STO 96
 RCL IND 40
 STO 41
 RCL 39
@@ -125,6 +134,8 @@ LBL :DEL:
 RCL 22
 X=0?
 RTN
+0
+STO 96
 1
 STO- 22
 RCL 22
@@ -136,6 +147,8 @@ XEQ :SHOWF:
 RTN
 REM ---- LBL :CLEAR: the formula empty ----
 LBL :CLEAR:
+0
+STO 96
 ">"
 STO 21
 0
@@ -468,6 +481,9 @@ LBL :VERDICT:
 RCL 37
 X≠0?
 GTO :SYNTAX:
+REM a result word in R24: key 6 may show its table
+1
+STO 96
 0
 STO 47
 -1
@@ -512,9 +528,14 @@ RCL 47
 X<>Y
 ÷
 STO 47
-REM the screen: the verdict, the rows, the examples
+REM the screen: the verdict (row 100), the rows (80), the true and the false example (60, 40: one line each,
+REM six variables do not fit on one)
 1
 GRMOD
+"                                                  "
+100
+6
+ATEXT Z
 "                                                  "
 80
 6
@@ -538,7 +559,7 @@ RCL 49
 X<0?
 XEQ :TAUT:
 RCL 34
-80
+100
 6
 ATEXT Z
 REM the rows: "true in 3 of 4 rows"
@@ -555,7 +576,7 @@ Y^X
 " rows"
 x→α 34
 RCL 34
-60
+80
 6
 ATEXT Z
 REM a contingency: a true row and a false row (the variables used only)
@@ -569,8 +590,12 @@ RTN
 STO 34
 RCL 48
 XEQ :ROW:
-"  F: "
-x→α 34
+RCL 34
+60
+6
+ATEXT Z
+"F: "
+STO 34
 RCL 49
 XEQ :ROW:
 RCL 34
@@ -658,6 +683,199 @@ LBL :ONE:
 "=1 "
 STO 42
 RTN
+REM ---- LBL :TABLE: key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font: the
+REM formula on top, then 2^n rows (up to 64: four columns of 16), each "1 0 1 | 1" (the variables in the order
+REM p..u, the first one changing slowest, all true first; then the formula's value), a header over each column.
+REM Row k (2^n - 1 down to 0): the j-th variable used takes bit n - 1 - j of k; the bit of the word R24 to read is
+REM m = the sum of 2^code over the variables true in the row (code 0-5: p-u, bit i of row m is variable i).
+REM Any key goes back: the formula, the soft keys and the verdict drawn again. LBL / DSE / GTO loops (10 DO already).
+REM R47 ">" then the code letters of the variables used, R34 the header, R40 n, R41 the rows left (2^n down to 1),
+REM R38 k, R43 j (n down to 1), R45 m, R48 the row's place (0 up), R33 the row's text, R49 a bit, R42 work ----
+LBL :TABLE:
+RCL 96
+X=0?
+RTN
+CLLCD
+0
+GRMOD
+21
+GRFNT
+RCL 95
+212
+6
+ATEXT Z
+10
+GRFNT
+">"
+STO 47
+" "
+STO 34
+0
+STO 40
+6
+STO 44
+LBL :TBV:
+XEQ :USED?:
+RCL 39
+X≥0?
+XEQ :TBU:
+DSE 44
+GTO :TBV:
+"| f"
+x→α 34
+2
+RCL 40
+Y^X
+STO 41
+0
+STO 48
+REM each row: k = R41 - 1, its digits and m
+LBL :TBR:
+RCL 41
+1
+-
+STO 38
+" "
+STO 33
+0
+STO 45
+RCL 40
+STO 43
+X=0?
+GTO :TBF:
+LBL :TBB:
+REM the bit of k for the variable n - j (the first one: the highest bit)
+RCL 38
+2
+RCL 43
+1
+-
+Y^X
+÷
+IP
+2
+MOD
+STO 49
+αIP 33
+" "
+x→α 33
+REM its code (the place of its letter in R46, 0-5): m + bit × 2^code
+RCL 47
+STO 42
+RCL 40
+RCL 43
+-
+1
++
+αSL 42
+1
+αLEFT 42
+αPOS 46
+2
+X<>Y
+Y^X
+RCL 49
+×
+STO+ 45
+DSE 43
+GTO :TBB:
+LBL :TBF:
+REM the formula's value in row m: bit m of the result word
+"| 0"
+STO 42
+RCL 24
+BS? IND 45
+XEQ :TB1:
+RCL 42
+x→α 33
+REM the place: column IP(place / 16) at x 2 + 99 c (the text starts with a space), line place mod 16; a header
+REM over each column
+RCL 48
+16
+MOD
+X=0?
+XEQ :TBH:
+RCL 33
+RCL 48
+16
+MOD
+9
+×
+CHS
+181
++
+RCL 48
+16
+÷
+IP
+99
+×
+2
++
+ATEXT Z
+1
+STO+ 48
+DSE 41
+GTO :TBR:
+"ANY KEY: BACK"
+4
+8
+ATEXT Z
+REM wait for a key (true: no key yet)
+LBL :TBW:
+PAUSE 50
+KEY? 23
+GTO :TBW:
+REM back: the formula, the soft keys, the verdict
+CLLCD
+21
+GRFNT
+XEQ :LABELS:
+XEQ :VERDICT:
+RTN
+REM LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
+LBL :TBU:
+1
+STO+ 40
+RCL 46
+STO 42
+6
+RCL 44
+-
+STO 43
+αSL 42
+1
+αLEFT 42
+x→α 47
+RCL 93
+STO 42
+RCL 43
+αSL 42
+1
+αLEFT 42
+x→α 34
+" "
+x→α 34
+RTN
+REM LBL :TB1: the formula is true in the row
+LBL :TB1:
+"| 1"
+STO 42
+RTN
+REM LBL :TBH: the header of the column of the place R48
+LBL :TBH:
+RCL 34
+190
+RCL 48
+16
+÷
+IP
+99
+×
+2
++
+ATEXT Z
+RTN
 REM ---- LBL 74-89: the glyph of the code 0-15 ----
 LBL 74
 "p"
@@ -711,16 +929,18 @@ LBL 89
 RTN
 REM LBL :SYNTAX: the formula is not well formed
 LBL :SYNTAX:
+0
+STO 96
 1
 GRMOD
 "                                                  "
-80
+100
 6
 ATEXT Z
 0
 GRMOD
 "SYNTAX ERROR"
-80
+100
 6
 ATEXT Z
 RTN
@@ -784,7 +1004,7 @@ REM LBL :HINTS: the keys (small font, row 26)
 LBL :HINTS:
 10
 GRFNT
-"1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  7 CLEAR  0 END"
+"1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  6 TABLE  7 CLEAR  0 END"
 26
 6
 ATEXT Z
@@ -794,6 +1014,8 @@ RTN
 REM ---- LBL :INIT: the words, the symbols, the pages, the screen ----
 LBL :INIT:
 WSIZE 64
+0
+STO 96
 REM p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
 1010101010101010101010101010101010101010101010101010101010101010#2
 STO 25

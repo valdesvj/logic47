@@ -25,6 +25,7 @@ contingency, gives a row where it is true and one where it is false.
 | 3 | page 3: `( ) T ⊥` |
 | 4 | delete the last symbol |
 | 5 | evaluate |
+| 6 | the truth table of the formula just evaluated (any key goes back) |
 | 7 | clear the formula |
 | 0 | the end: the screen cleared, your stack and LASTx as they were |
 
@@ -37,6 +38,16 @@ contingency, gives a row where it is true and one where it is false.
     SYNTAX ERROR         (a missing operand or bracket, two operands side by side...)
 
 The rows are those of the variables in the formula: 2ⁿ for n variables.
+
+## The truth table (key 6)
+
+After 5, key 6 shows the table in the small font: a column for each variable used (p first, changing slowest),
+the formula's value `f` last, from all true down to all false; up to 64 rows on one screen, in columns of 16. Any key
+goes back to the formula and the verdict.
+
+![LOGIC47 truth table](docs/LOGIC47_table6.png)
+
+About 1 400 steps for 8 rows and 16 000 for 64 (about 3 s on a C47 at 0.17 ms a step).
 
 ## How: the whole truth table at once
 
@@ -72,7 +83,7 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
     python3 python/logic47sim.py     # docs/LOGIC47_*.png
     python3 tools/make_gif.py        # docs/LOGIC47_demo.gif
 
-Size: 757 steps, about 2.8 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
+Size: 955 steps, about 3.4 KB; no IF, 10 DO (the original DM42's limit). Written with the C47 STRUCT commands.
 Calculators: C47 / R47 with STRUCT, ATEXT and GRFNT (firmware 00.109.05.00a0.ALPHA or later, as Elements 47).
 **Not yet run on a real C47**: the bitwise commands (`AND OR XOR NOT BS? BC?`) are new to these projects and
 need a first try.
