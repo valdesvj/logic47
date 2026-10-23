@@ -700,7 +700,8 @@
  634  "u"
  635  RTN
  636  LBL 80
- 637  "⊤"
+      ; true drawn as a plain T: the font's ⊤ is the small raised transpose T
+ 637  "T"
  638  RTN
  639  LBL 81
  640  "⊥"
