@@ -10,6 +10,7 @@ from decimal import Decimal as D
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'python'))
 import logic47sim as L
+import c47sim
 
 VARS = 'pqrstu'
 FAIL = []
@@ -224,12 +225,38 @@ def main():
     check(got(texts) == expect('p∨¬p'), 'delete: %s' % got(texts))
     shots, texts, c = L.run(L.keys('p∨q', False) + [L.CLEAR] + L.keys('p∧¬p'))
     check(got(texts) == expect('p∧¬p'), 'clear: %s' % got(texts))
-    # the stack kept, R20-R96 cleared, GRMOD 0, GRFNT 20 at the end
+    # the stack kept, R20-R98 cleared, GRMOD 0, GRFNT 20 at the end
     shots, texts, c = L.run(L.keys('p→q') + [L.END], stack=(1, 2, 3, 4))
     check([int(v) for v in c.s[:4]] == [1, 2, 3, 4], 'stack: %s' % c.s[:4])
-    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 96 and v not in (0, '', D(0))]
+    left = [k for k, v in c.reg.items() if k.isdigit() and 20 <= int(k) <= 98 and v not in (0, '', D(0))]
     check(not left, 'registers left: %s' % left)
     check(getattr(c, 'grmod', 0) == 0 and getattr(c, 'grfnt', 20) == 20, 'GRMOD 0, GRFNT 20 at the end')
+    # the standby check: a key wait with no key and the clock 10 min on (the calculator was in standby) ends
+    # the program; in the truth table it goes back and the next main pass ends it; 5 s: it waits on
+    def standby(ks, gap):
+        c = c47sim.load([L.PROG])
+        c.s = [D(1), D(2), D(3), D(4)]; c.pix = []; c.frames = []; c.clock = 2461338.0
+        script = list(ks)
+
+        def count(op, x):
+            if op == 'KEY?':
+                k = script.pop(0) if script else L.END
+                if k is None:
+                    c.keys = []; c.keyskip = True; c.clock += gap / 86400.0
+                else:
+                    c.keys = [k]; c.keyskip = False
+        c.count = count
+        c.run('LOGIC47', maxsteps=10 ** 8)
+        return c, script
+    f = L.keys('p→q')
+    c, left = standby(f[:2] + [None] + f[2:] + [L.END], 600)
+    check(left == f[2:] + [L.END] and [int(v) for v in c.s[:4]] == [1, 2, 3, 4] and c.pix == [],
+          'standby in the main wait: the program ends, the stack back (keys left %s)' % left)
+    c, left = standby(f + [L.TABLE, None, None, L.EVAL, L.END], 600)
+    check(left == [L.EVAL, L.END] and [int(v) for v in c.s[:4]] == [1, 2, 3, 4] and c.pix == [],
+          'standby in the table: back, and the next pass ends the program (keys left %s)' % left)
+    c, left = standby(f[:2] + [None] + f[2:] + [L.END], 5)
+    check(left == [], 'a gap of 5 s: it waits on (keys left %s)' % left)
     print('ALL OK' if not FAIL else '%d FAILED' % len(FAIL))
     return not FAIL
 

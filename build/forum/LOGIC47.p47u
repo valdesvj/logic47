@@ -31,7 +31,8 @@
 @ 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
 @ Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
 @ Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
-@ The user's stack and LASTx are kept; at the end R20-R96 are cleared, WSIZE stays 64.
+@ The user's stack and LASTx are kept; at the end R20-R98 are cleared, WSIZE stays 64. R97 the clock's JD at
+@ the last key wait, R98 1 / 0 wait on / end (the standby check: after a standby the waking key ends it).
 @ Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
 @ Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
 @ R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
@@ -50,11 +51,16 @@ LocR 9                          ; the user's stack in the local registers: STOS 
 STOS R.00
 LASTx
 STO R.08
-XEQ 50                          ; -> :INIT:
-DO 01                           ; ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
-  DO 02                         ; 7 (52) clear, 0 end ----
+XEQ 52                          ; -> :INIT:
+DO 01                           ; ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table, 7 (52) clear, 0 end ----
+  DO 02                         ; with no key LBL :WAKE: (the standby check) sets R98 = 1 to wait on, 0 to end (R23 = 82, as 0)
+    0
+    STO 98
     PAUSE 50
     KEY? 23
+    XEQ 51                      ; -> :WAKE:
+    RCL 98
+    X≠0?
   WHILE 02
   ENDDO 02
   RCL 23
@@ -93,7 +99,7 @@ WHILE 01
   X=Y?
   XEQ 36                        ; -> :TABLE:
 ENDDO 01
-20.77                           ; ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.79                           ; ---- 0: the end: R20-R98 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
 R-CLR
 0
 GRMOD
@@ -142,7 +148,7 @@ RTN
 LBL 01                          ; :PAGE:  ---- LBL :PAGE: the page R39 (1-3) and its soft-key labels ----
 RCL 39
 STO 20
-XEQ 48                          ; -> :LABELS:
+XEQ 49                          ; -> :LABELS:
 RTN
 LBL 02                          ; :DEL:  ---- LBL :DEL: the last symbol off (">" stays) ----
 RCL 22
@@ -467,7 +473,7 @@ RTN
 LBL 26                          ; :VERDICT:  ---- LBL :VERDICT: the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
 RCL 37                          ; down to 0: BS? IND 45); R40 the variables used (n), R41 2^(6 - n) ----
 X≠0?
-GTO 47                          ; -> :SYNTAX:
+GTO 48                          ; -> :SYNTAX:
 1                               ; a result word in R24: key 6 may show its table
 STO 96
 0
@@ -687,7 +693,7 @@ LBL 37                          ; :TBV:
 XEQ 32                          ; -> :USED?:
 RCL 39
 X≥0?
-XEQ 44                          ; -> :TBU:
+XEQ 45                          ; -> :TBU:
 DSE 44
 GTO 37                          ; -> :TBV:
 "| Φ"                           ; the formula's value: Φ (capital phi, the usual letter for a formula; the small font has it)
@@ -750,14 +756,14 @@ LBL 40                          ; :TBF:
 STO 42
 RCL 24
 BS? IND 45
-XEQ 45                          ; -> :TB1:
+XEQ 46                          ; -> :TB1:
 RCL 42
 x→α 33
 RCL 48                          ; the place: column IP(place / 16) at x 2 + 99 c (the text starts with a space), line place mod 16; a header
 16                              ; over each column
 MOD
 X=0?
-XEQ 46                          ; -> :TBH:
+XEQ 47                          ; -> :TBH:
 RCL 33
 RCL 48
 16
@@ -811,17 +817,25 @@ LBL 42                          ; :TBK:
 4
 8
 ATEXT Z
-LBL 43                          ; :TBW:  wait for a key (true: no key yet)
+LBL 43                          ; :TBW:  wait for a key (true: no key yet); no key: LBL :TBNK: (the standby check)
 PAUSE 50
 KEY? 23
-GTO 43                          ; -> :TBW:
+GTO 44                          ; -> :TBNK:
 CLLCD                           ; back: the formula, the soft keys, the verdict
 21
 GRFNT
-XEQ 48                          ; -> :LABELS:
+XEQ 49                          ; -> :LABELS:
 XEQ 26                          ; -> :VERDICT:
 RTN
-LBL 44                          ; :TBU:  LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
+LBL 44                          ; :TBNK:  LBL :TBNK: no key in the table: wait on, unless the calculator was in standby (LBL :WAKE:): then back to
+XEQ 51                          ; -> :WAKE:  the main key wait with its clock R97 0, so its next pass ends the program (the gap from 0 is a standby)
+RCL 98
+X≠0?
+GTO 43                          ; -> :TBW:
+0
+STO 97
+RTN
+LBL 45                          ; :TBU:  LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
 1
 STO+ 40
 RCL 46
@@ -844,11 +858,11 @@ x→α 34
 " "
 x→α 34
 RTN
-LBL 45                          ; :TB1:  LBL :TB1: the formula is true in the row
+LBL 46                          ; :TB1:  LBL :TB1: the formula is true in the row
 "| 1"
 STO 42
 RTN
-LBL 46                          ; :TBH:  LBL :TBH: the header of the column of the place R48
+LBL 47                          ; :TBH:  LBL :TBH: the header of the column of the place R48
 RCL 34
 190
 RCL 48
@@ -909,7 +923,7 @@ RTN
 LBL 89                          ; glyph of code 15 (letter p): )
 ")"
 RTN
-LBL 47                          ; :SYNTAX:  LBL :SYNTAX: the formula is not well formed
+LBL 48                          ; :SYNTAX:  LBL :SYNTAX: the formula is not well formed
 0
 STO 96
 1
@@ -925,7 +939,7 @@ GRMOD
 6
 ATEXT Z
 RTN
-LBL 48                          ; :LABELS:  ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
+LBL 49                          ; :LABELS:  ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
 1                               ; the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
 GRMOD
 21
@@ -974,10 +988,10 @@ DO 10
   DSE 44
 WHILE 10
 ENDDO 10
-XEQ 49                          ; -> :HINTS:
+XEQ 50                          ; -> :HINTS:
 XEQ 04                          ; -> :SHOWF:
 RTN
-LBL 49                          ; :HINTS:  LBL :HINTS: the keys (small font, row 26)
+LBL 50                          ; :HINTS:  LBL :HINTS: the keys (small font, row 26)
 10
 GRFNT
 "1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  6 TABLE  7 CLEAR  0 END"
@@ -987,8 +1001,39 @@ ATEXT Z
 21
 GRFNT
 RTN
-LBL 50                          ; :INIT:  ---- LBL :INIT: the words, the symbols, the pages, the screen ----
+LBL 51                          ; :WAKE:  ---- LBL :WAKE: the standby check: the calculator's clock (JD, R97 the last pass's); more than 30 s since
+Date→ⅅ                          ; the last pass (one is about 5 s): the calculator was in standby, and the key that woke it ends the program
+Time→ℸ                          ; cleanly (R23 = 82, as 0), so it is left in its normal state (a program left waiting went back
+ⅅℸ→J                            ; to standby at each press). R98 = 1 - (IP(gap / 30 s) not 0) ----
+RCL 97
+X<>Y
+STO 97
+X<>Y
+-
+86400
+×
+30
+÷
+IP
+X≠0?
+1
+1
+X<>Y
+-
+STO 98
+1
+RCL 98
+-
+82
+×
+STO 23
+RTN
+LBL 52                          ; :INIT:  ---- LBL :INIT: the words, the symbols, the pages, the screen ----
 WSIZE 64
+Date→ⅅ                          ; the clock now, for the standby check (LBL :WAKE:)
+Time→ℸ
+ⅅℸ→J
+STO 97
 0
 STO 96
 1010101010101010101010101010101010101010101010101010101010101010#2  ; p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
@@ -1024,6 +1069,6 @@ STO 21
 0
 STO 22
 CLLCD
-XEQ 48                          ; -> :LABELS:
+XEQ 49                          ; -> :LABELS:
 RTN
 END

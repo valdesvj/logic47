@@ -9,7 +9,8 @@ REM XOR and NOT gives the word of its 64 rows. A variable not in the formula onl
 REM 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
 REM Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
 REM Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
-REM The user's stack and LASTx are kept; at the end R20-R96 are cleared, WSIZE stays 64.
+REM The user's stack and LASTx are kept; at the end R20-R98 are cleared, WSIZE stays 64. R97 the clock's JD at
+REM the last key wait, R98 1 / 0 wait on / end (the standby check: after a standby the waking key ends it).
 REM Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
 REM Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
 REM R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
@@ -31,9 +32,15 @@ XEQ :INIT:
 REM ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
 REM 7 (52) clear, 0 end ----
 DO
+  REM with no key LBL :WAKE: (the standby check) sets R98 = 1 to wait on, 0 to end (R23 = 82, as 0)
   DO
+    0
+    STO 98
     PAUSE 50
     KEY? 23
+    XEQ :WAKE:
+    RCL 98
+    X≠0?
   WHILE
   ENDDO
   RCL 23
@@ -73,8 +80,8 @@ WHILE
   X=Y?
   XEQ :TABLE:
 ENDDO
-REM ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
-20.77
+REM ---- 0: the end: R20-R98 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.79
 R-CLR
 0
 GRMOD
@@ -851,17 +858,27 @@ LBL :TBK:
 4
 8
 ATEXT Z
-REM wait for a key (true: no key yet)
+REM wait for a key (true: no key yet); no key: LBL :TBNK: (the standby check)
 LBL :TBW:
 PAUSE 50
 KEY? 23
-GTO :TBW:
+GTO :TBNK:
 REM back: the formula, the soft keys, the verdict
 CLLCD
 21
 GRFNT
 XEQ :LABELS:
 XEQ :VERDICT:
+RTN
+REM LBL :TBNK: no key in the table: wait on, unless the calculator was in standby (LBL :WAKE:): then back to
+REM the main key wait with its clock R97 0, so its next pass ends the program (the gap from 0 is a standby)
+LBL :TBNK:
+XEQ :WAKE:
+RCL 98
+X≠0?
+GTO :TBW:
+0
+STO 97
 RTN
 REM LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
 LBL :TBU:
@@ -1041,9 +1058,45 @@ ATEXT Z
 21
 GRFNT
 RTN
+REM ---- LBL :WAKE: the standby check: the calculator's clock (JD, R97 the last pass's); more than 30 s since
+REM the last pass (one is about 5 s): the calculator was in standby, and the key that woke it ends the program
+REM cleanly (R23 = 82, as 0), so it is left in its normal state (a program left waiting went back
+REM to standby at each press). R98 = 1 - (IP(gap / 30 s) not 0) ----
+LBL :WAKE:
+Date→ⅅ
+Time→ℸ
+ⅅℸ→J
+RCL 97
+X<>Y
+STO 97
+X<>Y
+-
+86400
+×
+30
+÷
+IP
+X≠0?
+1
+1
+X<>Y
+-
+STO 98
+1
+RCL 98
+-
+82
+×
+STO 23
+RTN
 REM ---- LBL :INIT: the words, the symbols, the pages, the screen ----
 LBL :INIT:
 WSIZE 64
+REM the clock now, for the standby check (LBL :WAKE:)
+Date→ⅅ
+Time→ℸ
+ⅅℸ→J
+STO 97
 0
 STO 96
 REM p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
