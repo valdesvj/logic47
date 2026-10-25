@@ -9,8 +9,7 @@
       ; 2^n for the n variables used, and the true rows the set bits / 2^(6 - n).
       ; Precedence, high to low: ¬, ∧, ∨ and ⊕, →, ↔ (→ to the right: p→q→r = p→(q→r); the others to the left).
       ; Keys: F1-F6 a symbol of the page, 1 2 3 the page, 4 delete the last symbol, 5 evaluate, 7 clear, 0 end.
-      ; The user's stack and LASTx are kept; at the end R20-R98 are cleared, WSIZE stays 64. R97 the clock's JD at
-      ; the last key wait, R98 1 / 0 wait on / end (the standby check: after a standby the waking key ends it).
+      ; The user's stack and LASTx are kept; at the end R20-R96 are cleared, WSIZE stays 64.
       ; Screen 400 x 240, row 0 = bottom. ATEXT in GRFNT 21 (GRFNT 10 for the small text).
       ; Registers: R20 the page, R21 the formula (">" then its symbols), R22 its number of symbols, R23 the key,
       ; R24 the result word, R25-R32 the words of p q r s t u ⊤ ⊥ (R25 + the code), R33 the symbol being read,
@@ -28,668 +27,662 @@
    3  STOS R.00
    4  LASTx
    5  STO R.08
-   6  XEQ :INIT:    (52)
+   6  XEQ :INIT:    (50)
       ; ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
       ; 7 (52) clear, 0 end ----
    7  DO    (01)
-        ; with no key LBL :WAKE: (the standby check) sets R98 = 1 to wait on, 0 to end (R23 = 82, as 0)
    8    DO    (02)
-   9      0
-  10      STO 98
-  11      PAUSE 50
-  12      KEY? 23
-  13      XEQ :WAKE:    (51)
-  14      RCL 98
-  15      X≠0?
-  16    WHILE    (02)
-  17    ENDDO    (02)
-  18    RCL 23
-  19    82
-  20    X≠Y?
-  21  WHILE    (01)
-  22    RCL 23
-  23    17
-  24    X>Y?
-  25    XEQ :FKEY:    (00)
-  26    RCL 23
-  27    71
-  28    -
-  29    STO 39
+   9      PAUSE 50
+  10      KEY? 23
+  11    WHILE    (02)
+  12    ENDDO    (02)
+  13    RCL 23
+  14    82
+  15    X≠Y?
+  16  WHILE    (01)
+  17    RCL 23
+  18    17
+  19    X>Y?
+  20    XEQ :FKEY:    (00)
+  21    RCL 23
+  22    71
+  23    -
+  24    STO 39
         ; 1 2 3: |key - 73| <= 1
-  30    73
-  31    RCL 23
-  32    -
-  33    ABS
-  34    1
-  35    X≥Y?
-  36    XEQ :PAGE:    (01)
-  37    RCL 23
-  38    62
-  39    X=Y?
-  40    XEQ :DEL:    (02)
-  41    RCL 23
-  42    63
-  43    X=Y?
-  44    XEQ :EVAL:    (07)
-  45    RCL 23
-  46    52
-  47    X=Y?
-  48    XEQ :CLEAR:    (03)
-  49    RCL 23
-  50    64
-  51    X=Y?
-  52    XEQ :TABLE:    (36)
-  53  ENDDO    (01)
-      ; ---- 0: the end: R20-R98 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
-  54  20.79
-  55  R-CLR
-  56  0
-  57  GRMOD
-  58  20
-  59  GRFNT
-  60  CLLCD
-  61  RCL R.08
-  62  STO L
-  63  RCLS R.00
-  64  RTN
+  25    73
+  26    RCL 23
+  27    -
+  28    ABS
+  29    1
+  30    X≥Y?
+  31    XEQ :PAGE:    (01)
+  32    RCL 23
+  33    62
+  34    X=Y?
+  35    XEQ :DEL:    (02)
+  36    RCL 23
+  37    63
+  38    X=Y?
+  39    XEQ :EVAL:    (07)
+  40    RCL 23
+  41    52
+  42    X=Y?
+  43    XEQ :CLEAR:    (03)
+  44    RCL 23
+  45    64
+  46    X=Y?
+  47    XEQ :TABLE:    (36)
+  48  ENDDO    (01)
+      ; ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+  49  20.77
+  50  R-CLR
+  51  0
+  52  GRMOD
+  53  20
+  54  GRFNT
+  55  CLLCD
+  56  RCL R.08
+  57  STO L
+  58  RCLS R.00
+  59  RTN
       ; ---- LBL :FKEY: F1-F6 (key 11-16; other keys below 17: nothing): the symbol n of the page appended ----
-  65  LBL :FKEY:    (00)
-  66  RCL 23
-  67  10
-  68  -
-  69  X≤0?
-  70  RTN
-  71  STO 39
-  72  RCL 20
-  73  89
-  74  +
-  75  STO 40
-  76  RCL IND 40
-  77  STO 41
+  60  LBL :FKEY:    (00)
+  61  RCL 23
+  62  10
+  63  -
+  64  X≤0?
+  65  RTN
+  66  STO 39
+  67  RCL 20
+  68  89
+  69  +
+  70  STO 40
+  71  RCL IND 40
+  72  STO 41
       ; the page's text has fewer symbols than keys: nothing (its length: the place of a "|" put at its end)
-  78  "|"
-  79  x→α 41
-  80  "|"
-  81  αPOS 41
-  82  RCL 39
-  83  X>Y?
-  84  RTN
+  73  "|"
+  74  x→α 41
+  75  "|"
+  76  αPOS 41
+  77  RCL 39
+  78  X>Y?
+  79  RTN
       ; the formula changes: no table until it is evaluated again
-  85  0
-  86  STO 96
-  87  RCL IND 40
-  88  STO 41
-  89  RCL 39
-  90  1
-  91  -
-  92  αSL 41
-  93  1
-  94  αLEFT 41
-  95  x→α 21
-  96  1
-  97  STO+ 22
-  98  XEQ :SHOWF:    (04)
-  99  RTN
+  80  0
+  81  STO 96
+  82  RCL IND 40
+  83  STO 41
+  84  RCL 39
+  85  1
+  86  -
+  87  αSL 41
+  88  1
+  89  αLEFT 41
+  90  x→α 21
+  91  1
+  92  STO+ 22
+  93  XEQ :SHOWF:    (04)
+  94  RTN
       ; ---- LBL :PAGE: the page R39 (1-3) and its soft-key labels ----
- 100  LBL :PAGE:    (01)
- 101  RCL 39
- 102  STO 20
- 103  XEQ :LABELS:    (49)
- 104  RTN
+  95  LBL :PAGE:    (01)
+  96  RCL 39
+  97  STO 20
+  98  XEQ :LABELS:    (48)
+  99  RTN
       ; ---- LBL :DEL: the last symbol off (">" stays) ----
- 105  LBL :DEL:    (02)
- 106  RCL 22
- 107  X=0?
- 108  RTN
- 109  0
- 110  STO 96
- 111  1
- 112  STO- 22
- 113  RCL 22
- 114  1
- 115  +
- 116  αLEFT 21
- 117  STO 21
- 118  XEQ :SHOWF:    (04)
- 119  RTN
+ 100  LBL :DEL:    (02)
+ 101  RCL 22
+ 102  X=0?
+ 103  RTN
+ 104  0
+ 105  STO 96
+ 106  1
+ 107  STO- 22
+ 108  RCL 22
+ 109  1
+ 110  +
+ 111  αLEFT 21
+ 112  STO 21
+ 113  XEQ :SHOWF:    (04)
+ 114  RTN
       ; ---- LBL :CLEAR: the formula empty ----
- 120  LBL :CLEAR:    (03)
- 121  0
- 122  STO 96
- 123  ">"
- 124  STO 21
- 125  0
- 126  STO 22
- 127  XEQ :SHOWF:    (04)
- 128  RTN
+ 115  LBL :CLEAR:    (03)
+ 116  0
+ 117  STO 96
+ 118  ">"
+ 119  STO 21
+ 120  0
+ 121  STO 22
+ 122  XEQ :SHOWF:    (04)
+ 123  RTN
       ; ---- LBL :SHOWF: the formula (rows 36 up cleared: the result too; ATEXT goes on to the next line past x 380), the result
       ; area cleared ----
- 129  LBL :SHOWF:    (04)
- 130  36
- 131  0
- 132  CLLCDxy
- 133  0
- 134  GRMOD
- 135  10
- 136  GRFNT
- 137  "LOGIC 47 - PROPOSITIONAL LOGIC"
- 138  230
- 139  6
- 140  ATEXT Z
- 141  21
- 142  GRFNT
+ 124  LBL :SHOWF:    (04)
+ 125  36
+ 126  0
+ 127  CLLCDxy
+ 128  0
+ 129  GRMOD
+ 130  10
+ 131  GRFNT
+ 132  "LOGIC 47 - PROPOSITIONAL LOGIC"
+ 133  230
+ 134  6
+ 135  ATEXT Z
+ 136  21
+ 137  GRFNT
       ; the glyphs: ">" then each code's glyph (LBL 74 + code), in R95; R94 the place (a LBL / DSE / GTO loop:
       ; the program has already the 10 DO of the original DM42)
- 143  ">"
- 144  STO 95
- 145  RCL 22
- 146  X=0?
- 147  GTO :SHOW2:    (06)
- 148  STO 94
- 149  LBL :SHOW1:    (05)
- 150  RCL 21
- 151  STO 41
- 152  RCL 22
- 153  RCL 94
- 154  -
- 155  1
- 156  +
- 157  αSL 41
- 158  1
- 159  αLEFT 41
- 160  αPOS 46
- 161  74
- 162  +
- 163  STO 41
- 164  XEQ IND 41
- 165  x→α 95
- 166  DSE 94
- 167  GTO :SHOW1:    (05)
- 168  LBL :SHOW2:    (06)
- 169  RCL 95
- 170  200
- 171  6
- 172  ATEXT Z
- 173  RTN
+ 138  ">"
+ 139  STO 95
+ 140  RCL 22
+ 141  X=0?
+ 142  GTO :SHOW2:    (06)
+ 143  STO 94
+ 144  LBL :SHOW1:    (05)
+ 145  RCL 21
+ 146  STO 41
+ 147  RCL 22
+ 148  RCL 94
+ 149  -
+ 150  1
+ 151  +
+ 152  αSL 41
+ 153  1
+ 154  αLEFT 41
+ 155  αPOS 46
+ 156  74
+ 157  +
+ 158  STO 41
+ 159  XEQ IND 41
+ 160  x→α 95
+ 161  DSE 94
+ 162  GTO :SHOW1:    (05)
+ 163  LBL :SHOW2:    (06)
+ 164  RCL 95
+ 165  200
+ 166  6
+ 167  ATEXT Z
+ 168  RTN
       ; ---- LBL :EVAL: the formula evaluated on the words (shunting-yard: the values on R50-R69, the operators on
       ; R70-R89), then LBL :VERDICT: ----
- 174  LBL :EVAL:    (07)
- 175  49
- 176  STO 35
- 177  69
- 178  STO 36
- 179  0
- 180  STO 37
- 181  STO 33
- 182  DO    (03)
- 183    RCL 33
- 184    RCL 22
- 185    X>Y?
- 186  WHILE    (03)
+ 169  LBL :EVAL:    (07)
+ 170  49
+ 171  STO 35
+ 172  69
+ 173  STO 36
+ 174  0
+ 175  STO 37
+ 176  STO 33
+ 177  DO    (03)
+ 178    RCL 33
+ 179    RCL 22
+ 180    X>Y?
+ 181  WHILE    (03)
         ; the symbol: R21 without its first R33 + 1 characters, the first one left; its code in R46
- 187    1
- 188    STO+ 33
- 189    RCL 21
- 190    STO 41
- 191    RCL 33
- 192    αSL 41
- 193    1
- 194    αLEFT 41
- 195    αPOS 46
- 196    STO 38
- 197    XEQ :TOKEN:    (08)
- 198  ENDDO    (03)
+ 182    1
+ 183    STO+ 33
+ 184    RCL 21
+ 185    STO 41
+ 186    RCL 33
+ 187    αSL 41
+ 188    1
+ 189    αLEFT 41
+ 190    αPOS 46
+ 191    STO 38
+ 192    XEQ :TOKEN:    (08)
+ 193  ENDDO    (03)
       ; the operators left, then exactly one value
- 199  DO    (04)
- 200    RCL 36
- 201    69
- 202    X<Y?
- 203  WHILE    (04)
- 204    XEQ :POPOP:    (24)
- 205    STO 39
- 206    14
- 207    X=Y?
- 208    XEQ :ERR:    (25)
- 209    RCL 39
- 210    14
- 211    X≠Y?
- 212    XEQ :APPLY2:    (17)
- 213  ENDDO    (04)
- 214  RCL 35
- 215  50
- 216  X≠Y?
- 217  XEQ :ERR:    (25)
- 218  RCL 50
- 219  STO 24
- 220  XEQ :VERDICT:    (26)
- 221  RTN
+ 194  DO    (04)
+ 195    RCL 36
+ 196    69
+ 197    X<Y?
+ 198  WHILE    (04)
+ 199    XEQ :POPOP:    (24)
+ 200    STO 39
+ 201    14
+ 202    X=Y?
+ 203    XEQ :ERR:    (25)
+ 204    RCL 39
+ 205    14
+ 206    X≠Y?
+ 207    XEQ :APPLY2:    (17)
+ 208  ENDDO    (04)
+ 209  RCL 35
+ 210  50
+ 211  X≠Y?
+ 212  XEQ :ERR:    (25)
+ 213  RCL 50
+ 214  STO 24
+ 215  XEQ :VERDICT:    (26)
+ 216  RTN
       ; ---- LBL :TOKEN: the code R38: 0-7 a value, 8 ¬, 9-13 a binary connective, 14 (, 15 ) ----
- 222  LBL :TOKEN:    (08)
- 223  RCL 38
- 224  7
- 225  X≥Y?
- 226  XEQ :VALUE:    (09)
- 227  RCL 38
- 228  8
- 229  X=Y?
- 230  XEQ :PUSHOP:    (23)
- 231  RCL 38
- 232  14
- 233  X=Y?
- 234  XEQ :PUSHOP:    (23)
- 235  RCL 38
- 236  15
- 237  X=Y?
- 238  XEQ :CLOSE:    (10)
+ 217  LBL :TOKEN:    (08)
+ 218  RCL 38
+ 219  7
+ 220  X≥Y?
+ 221  XEQ :VALUE:    (09)
+ 222  RCL 38
+ 223  8
+ 224  X=Y?
+ 225  XEQ :PUSHOP:    (23)
+ 226  RCL 38
+ 227  14
+ 228  X=Y?
+ 229  XEQ :PUSHOP:    (23)
+ 230  RCL 38
+ 231  15
+ 232  X=Y?
+ 233  XEQ :CLOSE:    (10)
       ; 9-13: |c - 11| <= 2
- 239  RCL 38
- 240  11
- 241  -
- 242  ABS
- 243  2
- 244  X≥Y?
- 245  XEQ :BINARY:    (13)
- 246  RTN
+ 234  RCL 38
+ 235  11
+ 236  -
+ 237  ABS
+ 238  2
+ 239  X≥Y?
+ 240  XEQ :BINARY:    (13)
+ 241  RTN
       ; LBL :VALUE: the word of the variable or constant, R25 + code
- 247  LBL :VALUE:    (09)
- 248  RCL 38
- 249  25
- 250  +
- 251  STO 39
- 252  RCL IND 39
- 253  XEQ :PUSHV:    (20)
- 254  RTN
+ 242  LBL :VALUE:    (09)
+ 243  RCL 38
+ 244  25
+ 245  +
+ 246  STO 39
+ 247  RCL IND 39
+ 248  XEQ :PUSHV:    (20)
+ 249  RTN
       ; LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
- 255  LBL :CLOSE:    (10)
- 256  DO    (05)
- 257    XEQ :TOPC:    (11)
- 258    14
- 259    X≠Y?
- 260  WHILE    (05)
- 261    XEQ :POPOP:    (24)
- 262    XEQ :APPLY:    (18)
- 263  ENDDO    (05)
- 264  RCL 36
- 265  69
- 266  X<Y?
- 267  XEQ :POPOP:    (24)
- 268  RTN
+ 250  LBL :CLOSE:    (10)
+ 251  DO    (05)
+ 252    XEQ :TOPC:    (11)
+ 253    14
+ 254    X≠Y?
+ 255  WHILE    (05)
+ 256    XEQ :POPOP:    (24)
+ 257    XEQ :APPLY:    (18)
+ 258  ENDDO    (05)
+ 259  RCL 36
+ 260  69
+ 261  X<Y?
+ 262  XEQ :POPOP:    (24)
+ 263  RTN
       ; LBL :TOPC: the top operator's code in X; none: a syntax error and 14 (as if "(")
- 269  LBL :TOPC:    (11)
- 270  RCL 36
- 271  69
- 272  X≥Y?
- 273  GTO :NOPEN:    (12)
- 274  RCL IND 36
- 275  RTN
- 276  LBL :NOPEN:    (12)
- 277  XEQ :ERR:    (25)
- 278  14
- 279  RTN
+ 264  LBL :TOPC:    (11)
+ 265  RCL 36
+ 266  69
+ 267  X≥Y?
+ 268  GTO :NOPEN:    (12)
+ 269  RCL IND 36
+ 270  RTN
+ 271  LBL :NOPEN:    (12)
+ 272  XEQ :ERR:    (25)
+ 273  14
+ 274  RTN
       ; ---- LBL :BINARY: a binary connective, the code R38 9-13 ----
- 280  LBL :BINARY:    (13)
+ 275  LBL :BINARY:    (13)
       ; the operators on top with a higher precedence (or the same, for all but →) applied first
- 281  DO    (06)
- 282    XEQ :MORE:    (14)
- 283    RCL 42
- 284    X≠0?
- 285  WHILE    (06)
- 286    XEQ :POPOP:    (24)
- 287    XEQ :APPLY:    (18)
- 288  ENDDO    (06)
- 289  RCL 38
- 290  XEQ :PUSHOP:    (23)
- 291  RTN
+ 276  DO    (06)
+ 277    XEQ :MORE:    (14)
+ 278    RCL 42
+ 279    X≠0?
+ 280  WHILE    (06)
+ 281    XEQ :POPOP:    (24)
+ 282    XEQ :APPLY:    (18)
+ 283  ENDDO    (06)
+ 284  RCL 38
+ 285  XEQ :PUSHOP:    (23)
+ 286  RTN
       ; LBL :MORE: R42 = 1 when the top operator (not "(") goes before the code R38: prec(top) > prec(c), or
       ; equal and c is not →. prec: 543321 for the codes 8-13 (¬ ∧ ∨ ⊕ → ↔)
- 292  LBL :MORE:    (14)
- 293  0
- 294  STO 42
- 295  RCL 36
- 296  69
- 297  X≥Y?
- 298  RTN
- 299  RCL IND 36
- 300  14
- 301  X=Y?
- 302  RTN
- 303  RCL IND 36
- 304  XEQ :PREC:    (16)
- 305  STO 43
- 306  RCL 38
- 307  XEQ :PREC:    (16)
- 308  STO 44
- 309  RCL 43
- 310  X<Y?
- 311  RTN
- 312  X>Y?
- 313  XEQ :YES:    (15)
- 314  RCL 38
- 315  12
- 316  X≠Y?
- 317  XEQ :YES:    (15)
- 318  RTN
- 319  LBL :YES:    (15)
- 320  1
- 321  STO 42
- 322  RTN
+ 287  LBL :MORE:    (14)
+ 288  0
+ 289  STO 42
+ 290  RCL 36
+ 291  69
+ 292  X≥Y?
+ 293  RTN
+ 294  RCL IND 36
+ 295  14
+ 296  X=Y?
+ 297  RTN
+ 298  RCL IND 36
+ 299  XEQ :PREC:    (16)
+ 300  STO 43
+ 301  RCL 38
+ 302  XEQ :PREC:    (16)
+ 303  STO 44
+ 304  RCL 43
+ 305  X<Y?
+ 306  RTN
+ 307  X>Y?
+ 308  XEQ :YES:    (15)
+ 309  RCL 38
+ 310  12
+ 311  X≠Y?
+ 312  XEQ :YES:    (15)
+ 313  RTN
+ 314  LBL :YES:    (15)
+ 315  1
+ 316  STO 42
+ 317  RTN
       ; LBL :PREC: the precedence of the code in X (8-13)
- 323  LBL :PREC:    (16)
- 324  13
- 325  X<>Y
- 326  -
- 327  10
- 328  X<>Y
- 329  Y^X
- 330  543321
- 331  X<>Y
- 332  ÷
- 333  IP
- 334  10
- 335  MOD
- 336  RTN
+ 318  LBL :PREC:    (16)
+ 319  13
+ 320  X<>Y
+ 321  -
+ 322  10
+ 323  X<>Y
+ 324  Y^X
+ 325  543321
+ 326  X<>Y
+ 327  ÷
+ 328  IP
+ 329  10
+ 330  MOD
+ 331  RTN
       ; LBL :APPLY2: the operator R39 (an unmatched "(" left out)
- 337  LBL :APPLY2:    (17)
- 338  RCL 39
- 339  XEQ :APPLY:    (18)
- 340  RTN
+ 332  LBL :APPLY2:    (17)
+ 333  RCL 39
+ 334  XEQ :APPLY:    (18)
+ 335  RTN
       ; ---- LBL :APPLY: the operator X (8-13) on the values: ¬ one, the others two (LBL 68-73) ----
- 341  LBL :APPLY:    (18)
- 342  60
- 343  +
- 344  STO 45
- 345  XEQ IND 45
+ 336  LBL :APPLY:    (18)
+ 337  60
+ 338  +
+ 339  STO 45
+ 340  XEQ IND 45
+ 341  RTN
+ 342  LBL 68
+ 343  XEQ :POPV:    (21)
+ 344  NOT
+ 345  XEQ :PUSHV:    (20)
  346  RTN
- 347  LBL 68
- 348  XEQ :POPV:    (21)
- 349  NOT
+ 347  LBL 69
+ 348  XEQ :POP2:    (19)
+ 349  AND
  350  XEQ :PUSHV:    (20)
  351  RTN
- 352  LBL 69
+ 352  LBL 70
  353  XEQ :POP2:    (19)
- 354  AND
+ 354  OR
  355  XEQ :PUSHV:    (20)
  356  RTN
- 357  LBL 70
+ 357  LBL 71
  358  XEQ :POP2:    (19)
- 359  OR
+ 359  XOR
  360  XEQ :PUSHV:    (20)
  361  RTN
- 362  LBL 71
- 363  XEQ :POP2:    (19)
- 364  XOR
- 365  XEQ :PUSHV:    (20)
- 366  RTN
- 367  LBL 72
- 368  XEQ :POPV:    (21)
- 369  STO 39
- 370  XEQ :POPV:    (21)
- 371  NOT
- 372  RCL 39
- 373  OR
- 374  XEQ :PUSHV:    (20)
- 375  RTN
- 376  LBL 73
- 377  XEQ :POP2:    (19)
- 378  XOR
- 379  NOT
- 380  XEQ :PUSHV:    (20)
- 381  RTN
+ 362  LBL 72
+ 363  XEQ :POPV:    (21)
+ 364  STO 39
+ 365  XEQ :POPV:    (21)
+ 366  NOT
+ 367  RCL 39
+ 368  OR
+ 369  XEQ :PUSHV:    (20)
+ 370  RTN
+ 371  LBL 73
+ 372  XEQ :POP2:    (19)
+ 373  XOR
+ 374  NOT
+ 375  XEQ :PUSHV:    (20)
+ 376  RTN
       ; LBL :POP2: Y = the first value, X = the second
- 382  LBL :POP2:    (19)
- 383  XEQ :POPV:    (21)
- 384  STO 39
- 385  XEQ :POPV:    (21)
- 386  RCL 39
- 387  RTN
+ 377  LBL :POP2:    (19)
+ 378  XEQ :POPV:    (21)
+ 379  STO 39
+ 380  XEQ :POPV:    (21)
+ 381  RCL 39
+ 382  RTN
       ; ---- the stacks: LBL :PUSHV: X on the values, LBL :POPV: the top value in X (none: a syntax error and 0);
       ; LBL :PUSHOP: X on the operators, LBL :POPOP: the top operator in X ----
- 388  LBL :PUSHV:    (20)
- 389  1
- 390  STO+ 35
- 391  R↓
- 392  STO IND 35
- 393  RTN
- 394  LBL :POPV:    (21)
- 395  RCL 35
- 396  49
- 397  X≥Y?
- 398  XEQ :EMPTY:    (22)
- 399  RCL IND 35
- 400  1
- 401  STO- 35
- 402  R↓
- 403  RTN
+ 383  LBL :PUSHV:    (20)
+ 384  1
+ 385  STO+ 35
+ 386  R↓
+ 387  STO IND 35
+ 388  RTN
+ 389  LBL :POPV:    (21)
+ 390  RCL 35
+ 391  49
+ 392  X≥Y?
+ 393  XEQ :EMPTY:    (22)
+ 394  RCL IND 35
+ 395  1
+ 396  STO- 35
+ 397  R↓
+ 398  RTN
       ; LBL :EMPTY: a value is missing: a syntax error, and a 0 pushed for it
- 404  LBL :EMPTY:    (22)
- 405  XEQ :ERR:    (25)
- 406  0
- 407  XEQ :PUSHV:    (20)
- 408  RTN
- 409  LBL :PUSHOP:    (23)
- 410  1
- 411  STO+ 36
- 412  R↓
- 413  STO IND 36
- 414  RTN
- 415  LBL :POPOP:    (24)
- 416  RCL IND 36
+ 399  LBL :EMPTY:    (22)
+ 400  XEQ :ERR:    (25)
+ 401  0
+ 402  XEQ :PUSHV:    (20)
+ 403  RTN
+ 404  LBL :PUSHOP:    (23)
+ 405  1
+ 406  STO+ 36
+ 407  R↓
+ 408  STO IND 36
+ 409  RTN
+ 410  LBL :POPOP:    (24)
+ 411  RCL IND 36
+ 412  1
+ 413  STO- 36
+ 414  R↓
+ 415  RTN
+ 416  LBL :ERR:    (25)
  417  1
- 418  STO- 36
- 419  R↓
- 420  RTN
- 421  LBL :ERR:    (25)
- 422  1
- 423  STO 37
- 424  RTN
+ 418  STO 37
+ 419  RTN
       ; ---- LBL :VERDICT: the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
       ; down to 0: BS? IND 45); R40 the variables used (n), R41 2^(6 - n) ----
- 425  LBL :VERDICT:    (26)
- 426  RCL 37
- 427  X≠0?
- 428  GTO :SYNTAX:    (48)
+ 420  LBL :VERDICT:    (26)
+ 421  RCL 37
+ 422  X≠0?
+ 423  GTO :SYNTAX:    (47)
       ; a result word in R24: key 6 may show its table
- 429  1
- 430  STO 96
- 431  0
- 432  STO 47
- 433  -1
- 434  STO 48
- 435  STO 49
- 436  64
- 437  STO 44
- 438  DO    (07)
- 439    RCL 44
- 440    1
- 441    -
- 442    STO 45
- 443    RCL 24
- 444    BS? IND 45
- 445    XEQ :TRUE:    (27)
- 446    RCL 24
- 447    BC? IND 45
- 448    XEQ :FALSE:    (28)
- 449    DSE 44
- 450  WHILE    (07)
- 451  ENDDO    (07)
+ 424  1
+ 425  STO 96
+ 426  0
+ 427  STO 47
+ 428  -1
+ 429  STO 48
+ 430  STO 49
+ 431  64
+ 432  STO 44
+ 433  DO    (07)
+ 434    RCL 44
+ 435    1
+ 436    -
+ 437    STO 45
+ 438    RCL 24
+ 439    BS? IND 45
+ 440    XEQ :TRUE:    (27)
+ 441    RCL 24
+ 442    BC? IND 45
+ 443    XEQ :FALSE:    (28)
+ 444    DSE 44
+ 445  WHILE    (07)
+ 446  ENDDO    (07)
       ; the variables used: n = how many of p..u are in the formula
- 452  0
- 453  STO 40
- 454  6
- 455  STO 44
- 456  DO    (08)
- 457    XEQ :USED?:    (32)
- 458    RCL 39
- 459    X≥0?
- 460    XEQ :INC40:    (29)
- 461    DSE 44
- 462  WHILE    (08)
- 463  ENDDO    (08)
- 464  2
- 465  6
- 466  RCL 40
- 467  -
- 468  Y^X
- 469  STO 41
- 470  RCL 47
- 471  X<>Y
- 472  ÷
- 473  STO 47
+ 447  0
+ 448  STO 40
+ 449  6
+ 450  STO 44
+ 451  DO    (08)
+ 452    XEQ :USED?:    (32)
+ 453    RCL 39
+ 454    X≥0?
+ 455    XEQ :INC40:    (29)
+ 456    DSE 44
+ 457  WHILE    (08)
+ 458  ENDDO    (08)
+ 459  2
+ 460  6
+ 461  RCL 40
+ 462  -
+ 463  Y^X
+ 464  STO 41
+ 465  RCL 47
+ 466  X<>Y
+ 467  ÷
+ 468  STO 47
       ; the screen: the verdict (row 100), the rows (80), the true and the false example (60, 40: one line each,
       ; six variables do not fit on one)
- 474  1
- 475  GRMOD
- 476  "                                                  "
- 477  100
- 478  6
- 479  ATEXT Z
- 480  "                                                  "
- 481  80
- 482  6
- 483  ATEXT Z
- 484  "                                                  "
- 485  60
- 486  6
- 487  ATEXT Z
- 488  "                                                  "
- 489  40
- 490  6
- 491  ATEXT Z
- 492  0
- 493  GRMOD
- 494  "CONTINGENCY"
- 495  STO 34
- 496  RCL 47
- 497  X=0?
- 498  XEQ :CONTRA:    (30)
- 499  RCL 49
- 500  X<0?
- 501  XEQ :TAUT:    (31)
- 502  RCL 34
- 503  100
- 504  6
- 505  ATEXT Z
+ 469  1
+ 470  GRMOD
+ 471  "                                                  "
+ 472  100
+ 473  6
+ 474  ATEXT Z
+ 475  "                                                  "
+ 476  80
+ 477  6
+ 478  ATEXT Z
+ 479  "                                                  "
+ 480  60
+ 481  6
+ 482  ATEXT Z
+ 483  "                                                  "
+ 484  40
+ 485  6
+ 486  ATEXT Z
+ 487  0
+ 488  GRMOD
+ 489  "CONTINGENCY"
+ 490  STO 34
+ 491  RCL 47
+ 492  X=0?
+ 493  XEQ :CONTRA:    (30)
+ 494  RCL 49
+ 495  X<0?
+ 496  XEQ :TAUT:    (31)
+ 497  RCL 34
+ 498  100
+ 499  6
+ 500  ATEXT Z
       ; the rows: "true in 3 of 4 rows"
- 506  "true in "
- 507  STO 34
- 508  RCL 47
- 509  αIP 34
- 510  " of "
- 511  x→α 34
- 512  2
- 513  RCL 40
- 514  Y^X
- 515  αIP 34
- 516  " rows"
- 517  x→α 34
- 518  RCL 34
- 519  80
- 520  6
- 521  ATEXT Z
+ 501  "true in "
+ 502  STO 34
+ 503  RCL 47
+ 504  αIP 34
+ 505  " of "
+ 506  x→α 34
+ 507  2
+ 508  RCL 40
+ 509  Y^X
+ 510  αIP 34
+ 511  " rows"
+ 512  x→α 34
+ 513  RCL 34
+ 514  80
+ 515  6
+ 516  ATEXT Z
       ; a contingency: a true row and a false row (the variables used only)
- 522  RCL 47
- 523  X=0?
- 524  RTN
- 525  RCL 49
- 526  X<0?
- 527  RTN
- 528  "T: "
- 529  STO 34
- 530  RCL 48
- 531  XEQ :ROW:    (33)
- 532  RCL 34
- 533  60
- 534  6
- 535  ATEXT Z
- 536  "F: "
- 537  STO 34
- 538  RCL 49
- 539  XEQ :ROW:    (33)
- 540  RCL 34
- 541  40
- 542  6
- 543  ATEXT Z
- 544  RTN
+ 517  RCL 47
+ 518  X=0?
+ 519  RTN
+ 520  RCL 49
+ 521  X<0?
+ 522  RTN
+ 523  "T: "
+ 524  STO 34
+ 525  RCL 48
+ 526  XEQ :ROW:    (33)
+ 527  RCL 34
+ 528  60
+ 529  6
+ 530  ATEXT Z
+ 531  "F: "
+ 532  STO 34
+ 533  RCL 49
+ 534  XEQ :ROW:    (33)
+ 535  RCL 34
+ 536  40
+ 537  6
+ 538  ATEXT Z
+ 539  RTN
       ; LBL :TRUE:, LBL :FALSE: bit R45 is 1 / 0
- 545  LBL :TRUE:    (27)
- 546  1
- 547  STO+ 47
- 548  RCL 45
- 549  STO 48
- 550  RTN
- 551  LBL :FALSE:    (28)
- 552  RCL 45
- 553  STO 49
- 554  RTN
- 555  LBL :INC40:    (29)
- 556  1
- 557  STO+ 40
- 558  RTN
- 559  LBL :CONTRA:    (30)
- 560  "CONTRADICTION"
- 561  STO 34
- 562  RTN
- 563  LBL :TAUT:    (31)
- 564  "TAUTOLOGY"
- 565  STO 34
- 566  RTN
+ 540  LBL :TRUE:    (27)
+ 541  1
+ 542  STO+ 47
+ 543  RCL 45
+ 544  STO 48
+ 545  RTN
+ 546  LBL :FALSE:    (28)
+ 547  RCL 45
+ 548  STO 49
+ 549  RTN
+ 550  LBL :INC40:    (29)
+ 551  1
+ 552  STO+ 40
+ 553  RTN
+ 554  LBL :CONTRA:    (30)
+ 555  "CONTRADICTION"
+ 556  STO 34
+ 557  RTN
+ 558  LBL :TAUT:    (31)
+ 559  "TAUTOLOGY"
+ 560  STO 34
+ 561  RTN
       ; LBL :USED?: R39 = the place of the variable 6 - R44 (p first) in the formula, -1 when not there
- 567  LBL :USED?:    (32)
- 568  6
- 569  RCL 44
- 570  -
- 571  STO 39
- 572  RCL 46
- 573  STO 42
- 574  RCL 39
- 575  αSL 42
- 576  1
- 577  αLEFT 42
- 578  αPOS 21
- 579  STO 39
- 580  RTN
+ 562  LBL :USED?:    (32)
+ 563  6
+ 564  RCL 44
+ 565  -
+ 566  STO 39
+ 567  RCL 46
+ 568  STO 42
+ 569  RCL 39
+ 570  αSL 42
+ 571  1
+ 572  αLEFT 42
+ 573  αPOS 21
+ 574  STO 39
+ 575  RTN
       ; LBL :ROW: the values of the variables used in row X: "p=1 q=0 " appended to R34
- 581  LBL :ROW:    (33)
- 582  STO 45
- 583  6
- 584  STO 44
- 585  DO    (09)
- 586    XEQ :USED?:    (32)
- 587    RCL 39
- 588    X≥0?
- 589    XEQ :VAR:    (34)
- 590    DSE 44
- 591  WHILE    (09)
- 592  ENDDO    (09)
- 593  RTN
+ 576  LBL :ROW:    (33)
+ 577  STO 45
+ 578  6
+ 579  STO 44
+ 580  DO    (09)
+ 581    XEQ :USED?:    (32)
+ 582    RCL 39
+ 583    X≥0?
+ 584    XEQ :VAR:    (34)
+ 585    DSE 44
+ 586  WHILE    (09)
+ 587  ENDDO    (09)
+ 588  RTN
       ; LBL :VAR: "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
- 594  LBL :VAR:    (34)
- 595  RCL 93
- 596  STO 42
- 597  6
- 598  RCL 44
- 599  -
- 600  STO 43
- 601  αSL 42
- 602  1
- 603  αLEFT 42
- 604  x→α 34
- 605  "=0 "
- 606  STO 42
- 607  RCL 43
- 608  25
- 609  +
- 610  STO 43
- 611  RCL IND 43
- 612  BS? IND 45
- 613  XEQ :ONE:    (35)
- 614  RCL 42
- 615  x→α 34
- 616  RTN
- 617  LBL :ONE:    (35)
- 618  "=1 "
- 619  STO 42
- 620  RTN
+ 589  LBL :VAR:    (34)
+ 590  RCL 93
+ 591  STO 42
+ 592  6
+ 593  RCL 44
+ 594  -
+ 595  STO 43
+ 596  αSL 42
+ 597  1
+ 598  αLEFT 42
+ 599  x→α 34
+ 600  "=0 "
+ 601  STO 42
+ 602  RCL 43
+ 603  25
+ 604  +
+ 605  STO 43
+ 606  RCL IND 43
+ 607  BS? IND 45
+ 608  XEQ :ONE:    (35)
+ 609  RCL 42
+ 610  x→α 34
+ 611  RTN
+ 612  LBL :ONE:    (35)
+ 613  "=1 "
+ 614  STO 42
+ 615  RTN
       ; ---- LBL :TABLE: key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font: the
       ; formula on top, then 2^n rows (up to 64: four columns of 16), each "1 0 1 | 1" (the variables in the order
       ; p..u, the first one changing slowest, all true first; then the formula's value Φ), a header over each column,
@@ -699,442 +692,396 @@
       ; Any key goes back: the formula, the soft keys and the verdict drawn again. LBL / DSE / GTO loops (10 DO already).
       ; R47 ">" then the code letters of the variables used, R34 the header, R40 n, R41 the rows left (2^n down to 1),
       ; R38 k, R43 j (n down to 1), R45 m, R48 the row's place (0 up), R33 the row's text, R49 a bit, R42 work ----
- 621  LBL :TABLE:    (36)
- 622  RCL 96
- 623  X=0?
- 624  RTN
- 625  CLLCD
- 626  0
- 627  GRMOD
- 628  21
- 629  GRFNT
- 630  RCL 95
- 631  212
- 632  6
- 633  ATEXT Z
- 634  10
- 635  GRFNT
- 636  ">"
- 637  STO 47
- 638  " "
- 639  STO 34
- 640  0
- 641  STO 40
- 642  6
- 643  STO 44
- 644  LBL :TBV:    (37)
- 645  XEQ :USED?:    (32)
- 646  RCL 39
- 647  X≥0?
- 648  XEQ :TBU:    (45)
- 649  DSE 44
- 650  GTO :TBV:    (37)
+ 616  LBL :TABLE:    (36)
+ 617  RCL 96
+ 618  X=0?
+ 619  RTN
+ 620  CLLCD
+ 621  0
+ 622  GRMOD
+ 623  21
+ 624  GRFNT
+ 625  RCL 95
+ 626  212
+ 627  6
+ 628  ATEXT Z
+ 629  10
+ 630  GRFNT
+ 631  ">"
+ 632  STO 47
+ 633  " "
+ 634  STO 34
+ 635  0
+ 636  STO 40
+ 637  6
+ 638  STO 44
+ 639  LBL :TBV:    (37)
+ 640  XEQ :USED?:    (32)
+ 641  RCL 39
+ 642  X≥0?
+ 643  XEQ :TBU:    (44)
+ 644  DSE 44
+ 645  GTO :TBV:    (37)
       ; the formula's value: Φ (capital phi, the usual letter for a formula; the small font has it)
- 651  "| Φ"
- 652  x→α 34
- 653  2
- 654  RCL 40
- 655  Y^X
- 656  STO 41
- 657  0
- 658  STO 48
+ 646  "| Φ"
+ 647  x→α 34
+ 648  2
+ 649  RCL 40
+ 650  Y^X
+ 651  STO 41
+ 652  0
+ 653  STO 48
       ; each row: k = R41 - 1, its digits and m
- 659  LBL :TBR:    (38)
- 660  RCL 41
- 661  1
- 662  -
- 663  STO 38
- 664  " "
- 665  STO 33
- 666  0
- 667  STO 45
- 668  RCL 40
- 669  STO 43
- 670  X=0?
- 671  GTO :TBF:    (40)
- 672  LBL :TBB:    (39)
+ 654  LBL :TBR:    (38)
+ 655  RCL 41
+ 656  1
+ 657  -
+ 658  STO 38
+ 659  " "
+ 660  STO 33
+ 661  0
+ 662  STO 45
+ 663  RCL 40
+ 664  STO 43
+ 665  X=0?
+ 666  GTO :TBF:    (40)
+ 667  LBL :TBB:    (39)
       ; the bit of k for the variable n - j (the first one: the highest bit)
- 673  RCL 38
- 674  2
- 675  RCL 43
- 676  1
- 677  -
- 678  Y^X
- 679  ÷
- 680  IP
- 681  2
- 682  MOD
- 683  STO 49
- 684  αIP 33
- 685  " "
- 686  x→α 33
+ 668  RCL 38
+ 669  2
+ 670  RCL 43
+ 671  1
+ 672  -
+ 673  Y^X
+ 674  ÷
+ 675  IP
+ 676  2
+ 677  MOD
+ 678  STO 49
+ 679  αIP 33
+ 680  " "
+ 681  x→α 33
       ; its code (the place of its letter in R46, 0-5): m + bit × 2^code
- 687  RCL 47
- 688  STO 42
- 689  RCL 40
- 690  RCL 43
- 691  -
- 692  1
- 693  +
- 694  αSL 42
- 695  1
- 696  αLEFT 42
- 697  αPOS 46
- 698  2
- 699  X<>Y
- 700  Y^X
- 701  RCL 49
- 702  ×
- 703  STO+ 45
- 704  DSE 43
- 705  GTO :TBB:    (39)
- 706  LBL :TBF:    (40)
+ 682  RCL 47
+ 683  STO 42
+ 684  RCL 40
+ 685  RCL 43
+ 686  -
+ 687  1
+ 688  +
+ 689  αSL 42
+ 690  1
+ 691  αLEFT 42
+ 692  αPOS 46
+ 693  2
+ 694  X<>Y
+ 695  Y^X
+ 696  RCL 49
+ 697  ×
+ 698  STO+ 45
+ 699  DSE 43
+ 700  GTO :TBB:    (39)
+ 701  LBL :TBF:    (40)
       ; the formula's value in row m: bit m of the result word
- 707  "| 0"
- 708  STO 42
- 709  RCL 24
- 710  BS? IND 45
- 711  XEQ :TB1:    (46)
- 712  RCL 42
- 713  x→α 33
+ 702  "| 0"
+ 703  STO 42
+ 704  RCL 24
+ 705  BS? IND 45
+ 706  XEQ :TB1:    (45)
+ 707  RCL 42
+ 708  x→α 33
       ; the place: column IP(place / 16) at x 2 + 99 c (the text starts with a space), line place mod 16; a header
       ; over each column
- 714  RCL 48
- 715  16
- 716  MOD
- 717  X=0?
- 718  XEQ :TBH:    (47)
- 719  RCL 33
- 720  RCL 48
- 721  16
- 722  MOD
- 723  9
- 724  ×
- 725  CHS
- 726  181
- 727  +
- 728  RCL 48
- 729  16
- 730  ÷
- 731  IP
- 732  99
- 733  ×
- 734  2
- 735  +
- 736  ATEXT Z
- 737  1
- 738  STO+ 48
- 739  DSE 41
- 740  GTO :TBR:    (38)
+ 709  RCL 48
+ 710  16
+ 711  MOD
+ 712  X=0?
+ 713  XEQ :TBH:    (46)
+ 714  RCL 33
+ 715  RCL 48
+ 716  16
+ 717  MOD
+ 718  9
+ 719  ×
+ 720  CHS
+ 721  181
+ 722  +
+ 723  RCL 48
+ 724  16
+ 725  ÷
+ 726  IP
+ 727  99
+ 728  ×
+ 729  2
+ 730  +
+ 731  ATEXT Z
+ 732  1
+ 733  STO+ 48
+ 734  DSE 41
+ 735  GTO :TBR:    (38)
       ; under each block of 16 rows (5 or 6 variables: 2 or 4 blocks): " BLOCK 1" ... at row 32
- 741  2
- 742  RCL 40
- 743  Y^X
- 744  16
- 745  ÷
- 746  STO 41
- 747  1
- 748  X≥Y?
- 749  GTO :TBK:    (42)
- 750  LBL :TBL:    (41)
- 751  " BLOCK "
- 752  STO 33
- 753  RCL 41
- 754  αIP 33
- 755  RCL 33
- 756  32
- 757  RCL 41
- 758  1
- 759  -
- 760  99
- 761  ×
- 762  2
- 763  +
- 764  ATEXT Z
- 765  DSE 41
- 766  GTO :TBL:    (41)
- 767  LBL :TBK:    (42)
- 768  "ANY KEY: BACK"
- 769  4
- 770  8
- 771  ATEXT Z
-      ; wait for a key (true: no key yet); no key: LBL :TBNK: (the standby check)
- 772  LBL :TBW:    (43)
- 773  PAUSE 50
- 774  KEY? 23
- 775  GTO :TBNK:    (44)
+ 736  2
+ 737  RCL 40
+ 738  Y^X
+ 739  16
+ 740  ÷
+ 741  STO 41
+ 742  1
+ 743  X≥Y?
+ 744  GTO :TBK:    (42)
+ 745  LBL :TBL:    (41)
+ 746  " BLOCK "
+ 747  STO 33
+ 748  RCL 41
+ 749  αIP 33
+ 750  RCL 33
+ 751  32
+ 752  RCL 41
+ 753  1
+ 754  -
+ 755  99
+ 756  ×
+ 757  2
+ 758  +
+ 759  ATEXT Z
+ 760  DSE 41
+ 761  GTO :TBL:    (41)
+ 762  LBL :TBK:    (42)
+ 763  "ANY KEY: BACK"
+ 764  4
+ 765  8
+ 766  ATEXT Z
+      ; wait for a key (true: no key yet)
+ 767  LBL :TBW:    (43)
+ 768  PAUSE 50
+ 769  KEY? 23
+ 770  GTO :TBW:    (43)
       ; back: the formula, the soft keys, the verdict
- 776  CLLCD
- 777  21
- 778  GRFNT
- 779  XEQ :LABELS:    (49)
- 780  XEQ :VERDICT:    (26)
- 781  RTN
-      ; LBL :TBNK: no key in the table: wait on, unless the calculator was in standby (LBL :WAKE:): then back to
-      ; the main key wait with its clock R97 0, so its next pass ends the program (the gap from 0 is a standby)
- 782  LBL :TBNK:    (44)
- 783  XEQ :WAKE:    (51)
- 784  RCL 98
- 785  X≠0?
- 786  GTO :TBW:    (43)
- 787  0
- 788  STO 97
- 789  RTN
+ 771  CLLCD
+ 772  21
+ 773  GRFNT
+ 774  XEQ :LABELS:    (48)
+ 775  XEQ :VERDICT:    (26)
+ 776  RTN
       ; LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
- 790  LBL :TBU:    (45)
- 791  1
- 792  STO+ 40
- 793  RCL 46
- 794  STO 42
- 795  6
- 796  RCL 44
- 797  -
- 798  STO 43
- 799  αSL 42
- 800  1
- 801  αLEFT 42
- 802  x→α 47
- 803  RCL 93
- 804  STO 42
- 805  RCL 43
- 806  αSL 42
- 807  1
- 808  αLEFT 42
- 809  x→α 34
- 810  " "
- 811  x→α 34
- 812  RTN
+ 777  LBL :TBU:    (44)
+ 778  1
+ 779  STO+ 40
+ 780  RCL 46
+ 781  STO 42
+ 782  6
+ 783  RCL 44
+ 784  -
+ 785  STO 43
+ 786  αSL 42
+ 787  1
+ 788  αLEFT 42
+ 789  x→α 47
+ 790  RCL 93
+ 791  STO 42
+ 792  RCL 43
+ 793  αSL 42
+ 794  1
+ 795  αLEFT 42
+ 796  x→α 34
+ 797  " "
+ 798  x→α 34
+ 799  RTN
       ; LBL :TB1: the formula is true in the row
- 813  LBL :TB1:    (46)
- 814  "| 1"
- 815  STO 42
- 816  RTN
+ 800  LBL :TB1:    (45)
+ 801  "| 1"
+ 802  STO 42
+ 803  RTN
       ; LBL :TBH: the header of the column of the place R48
- 817  LBL :TBH:    (47)
- 818  RCL 34
- 819  190
- 820  RCL 48
- 821  16
- 822  ÷
- 823  IP
- 824  99
- 825  ×
- 826  2
- 827  +
- 828  ATEXT Z
- 829  RTN
+ 804  LBL :TBH:    (46)
+ 805  RCL 34
+ 806  190
+ 807  RCL 48
+ 808  16
+ 809  ÷
+ 810  IP
+ 811  99
+ 812  ×
+ 813  2
+ 814  +
+ 815  ATEXT Z
+ 816  RTN
       ; ---- LBL 74-89: the glyph of the code 0-15 ----
- 830  LBL 74
- 831  "p"
- 832  RTN
- 833  LBL 75
- 834  "q"
- 835  RTN
- 836  LBL 76
- 837  "r"
- 838  RTN
- 839  LBL 77
- 840  "s"
- 841  RTN
- 842  LBL 78
- 843  "t"
- 844  RTN
- 845  LBL 79
- 846  "u"
- 847  RTN
- 848  LBL 80
+ 817  LBL 74
+ 818  "p"
+ 819  RTN
+ 820  LBL 75
+ 821  "q"
+ 822  RTN
+ 823  LBL 76
+ 824  "r"
+ 825  RTN
+ 826  LBL 77
+ 827  "s"
+ 828  RTN
+ 829  LBL 78
+ 830  "t"
+ 831  RTN
+ 832  LBL 79
+ 833  "u"
+ 834  RTN
+ 835  LBL 80
       ; true drawn as a plain T: the font's ⊤ is the small raised transpose T
- 849  "T"
- 850  RTN
- 851  LBL 81
- 852  "⊥"
- 853  RTN
- 854  LBL 82
- 855  "¬"
- 856  RTN
- 857  LBL 83
- 858  "∧"
- 859  RTN
- 860  LBL 84
- 861  "∨"
- 862  RTN
- 863  LBL 85
+ 836  "T"
+ 837  RTN
+ 838  LBL 81
+ 839  "⊥"
+ 840  RTN
+ 841  LBL 82
+ 842  "¬"
+ 843  RTN
+ 844  LBL 83
+ 845  "∧"
+ 846  RTN
+ 847  LBL 84
+ 848  "∨"
+ 849  RTN
+ 850  LBL 85
       ; exclusive or drawn as ⊻ (on the line as ∨): the font's ⊕ sits low, rows 10-20 of the cell
- 864  "⊻"
- 865  RTN
- 866  LBL 86
- 867  "→"
- 868  RTN
- 869  LBL 87
- 870  "↔"
- 871  RTN
- 872  LBL 88
- 873  "("
- 874  RTN
- 875  LBL 89
- 876  ")"
- 877  RTN
+ 851  "⊻"
+ 852  RTN
+ 853  LBL 86
+ 854  "→"
+ 855  RTN
+ 856  LBL 87
+ 857  "↔"
+ 858  RTN
+ 859  LBL 88
+ 860  "("
+ 861  RTN
+ 862  LBL 89
+ 863  ")"
+ 864  RTN
       ; LBL :SYNTAX: the formula is not well formed
- 878  LBL :SYNTAX:    (48)
- 879  0
- 880  STO 96
- 881  1
- 882  GRMOD
- 883  "                                                  "
- 884  100
- 885  6
- 886  ATEXT Z
- 887  0
- 888  GRMOD
- 889  "SYNTAX ERROR"
- 890  100
- 891  6
- 892  ATEXT Z
- 893  RTN
+ 865  LBL :SYNTAX:    (47)
+ 866  0
+ 867  STO 96
+ 868  1
+ 869  GRMOD
+ 870  "                                                  "
+ 871  100
+ 872  6
+ 873  ATEXT Z
+ 874  0
+ 875  GRMOD
+ 876  "SYNTAX ERROR"
+ 877  100
+ 878  6
+ 879  ATEXT Z
+ 880  RTN
       ; ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
- 894  LBL :LABELS:    (49)
+ 881  LBL :LABELS:    (48)
       ; the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
- 895  1
- 896  GRMOD
- 897  21
- 898  GRFNT
- 899  "                                                      "
- 900  0
- 901  0
- 902  ATEXT Z
- 903  0
- 904  GRMOD
- 905  RCL 20
- 906  89
- 907  +
- 908  STO 40
- 909  RCL IND 40
- 910  STO 41
+ 882  1
+ 883  GRMOD
+ 884  21
+ 885  GRFNT
+ 886  "                                                      "
+ 887  0
+ 888  0
+ 889  ATEXT Z
+ 890  0
+ 891  GRMOD
+ 892  RCL 20
+ 893  89
+ 894  +
+ 895  STO 40
+ 896  RCL IND 40
+ 897  STO 41
       ; as many labels as the page has symbols (page 3: four): its length, the place of a "|" put at its end
       ; (αSL / αLEFT past the end of a text is an error on the C47); R45 the length, R44 counts down
- 911  STO 42
- 912  "|"
- 913  x→α 42
- 914  "|"
- 915  αPOS 42
- 916  STO 45
- 917  STO 44
- 918  DO    (10)
- 919    RCL 41
- 920    STO 42
- 921    RCL 45
- 922    RCL 44
- 923    -
- 924    STO 43
- 925    αSL 42
- 926    1
- 927    αLEFT 42
- 928    αPOS 46
- 929    74
- 930    +
- 931    STO 42
- 932    XEQ IND 42
- 933    0
- 934    RCL 43
- 935    66
- 936    ×
- 937    29
- 938    +
- 939    ATEXT Z
- 940    DSE 44
- 941  WHILE    (10)
- 942  ENDDO    (10)
- 943  XEQ :HINTS:    (50)
- 944  XEQ :SHOWF:    (04)
- 945  RTN
+ 898  STO 42
+ 899  "|"
+ 900  x→α 42
+ 901  "|"
+ 902  αPOS 42
+ 903  STO 45
+ 904  STO 44
+ 905  DO    (10)
+ 906    RCL 41
+ 907    STO 42
+ 908    RCL 45
+ 909    RCL 44
+ 910    -
+ 911    STO 43
+ 912    αSL 42
+ 913    1
+ 914    αLEFT 42
+ 915    αPOS 46
+ 916    74
+ 917    +
+ 918    STO 42
+ 919    XEQ IND 42
+ 920    0
+ 921    RCL 43
+ 922    66
+ 923    ×
+ 924    29
+ 925    +
+ 926    ATEXT Z
+ 927    DSE 44
+ 928  WHILE    (10)
+ 929  ENDDO    (10)
+ 930  XEQ :HINTS:    (49)
+ 931  XEQ :SHOWF:    (04)
+ 932  RTN
       ; LBL :HINTS: the keys (small font, row 26)
- 946  LBL :HINTS:    (50)
- 947  10
- 948  GRFNT
- 949  "1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  6 TABLE  7 CLEAR  0 END"
- 950  26
- 951  6
- 952  ATEXT Z
- 953  21
- 954  GRFNT
- 955  RTN
-      ; ---- LBL :WAKE: the standby check: the calculator's clock (JD, R97 the last pass's); more than 30 s since
-      ; the last pass (one is about 5 s): the calculator was in standby, and the key that woke it ends the program
-      ; cleanly (R23 = 82, as 0), so it is left in its normal state (a program left waiting went back
-      ; to standby at each press). R98 = 1 - (IP(gap / 30 s) not 0) ----
- 956  LBL :WAKE:    (51)
- 957  Date→ⅅ
- 958  Time→ℸ
- 959  ⅅℸ→J
- 960  RCL 97
- 961  X<>Y
- 962  STO 97
- 963  X<>Y
- 964  -
- 965  86400
- 966  ×
- 967  30
- 968  ÷
- 969  IP
- 970  X≠0?
- 971  1
- 972  1
- 973  X<>Y
- 974  -
- 975  STO 98
- 976  1
- 977  RCL 98
- 978  -
- 979  82
- 980  ×
- 981  STO 23
- 982  RTN
+ 933  LBL :HINTS:    (49)
+ 934  10
+ 935  GRFNT
+ 936  "1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  6 TABLE  7 CLEAR  0 END"
+ 937  26
+ 938  6
+ 939  ATEXT Z
+ 940  21
+ 941  GRFNT
+ 942  RTN
       ; ---- LBL :INIT: the words, the symbols, the pages, the screen ----
- 983  LBL :INIT:    (52)
- 984  WSIZE 64
-      ; the clock now, for the standby check (LBL :WAKE:)
- 985  Date→ⅅ
- 986  Time→ℸ
- 987  ⅅℸ→J
- 988  STO 97
- 989  0
- 990  STO 96
+ 943  LBL :INIT:    (50)
+ 944  WSIZE 64
+ 945  0
+ 946  STO 96
       ; p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
- 991  1010101010101010101010101010101010101010101010101010101010101010#2
- 992  STO 25
- 993  1100110011001100110011001100110011001100110011001100110011001100#2
- 994  STO 26
- 995  1111000011110000111100001111000011110000111100001111000011110000#2
- 996  STO 27
- 997  1111111100000000111111110000000011111111000000001111111100000000#2
- 998  STO 28
- 999  1111111111111111000000000000000011111111111111110000000000000000#2
-1000  STO 29
-1001  1111111111111111111111111111111100000000000000000000000000000000#2
-1002  STO 30
-1003  1111111111111111111111111111111111111111111111111111111111111111#2
-1004  STO 31
-1005  0#2
-1006  STO 32
+ 947  1010101010101010101010101010101010101010101010101010101010101010#2
+ 948  STO 25
+ 949  1100110011001100110011001100110011001100110011001100110011001100#2
+ 950  STO 26
+ 951  1111000011110000111100001111000011110000111100001111000011110000#2
+ 952  STO 27
+ 953  1111111100000000111111110000000011111111000000001111111100000000#2
+ 954  STO 28
+ 955  1111111111111111000000000000000011111111111111110000000000000000#2
+ 956  STO 29
+ 957  1111111111111111111111111111111100000000000000000000000000000000#2
+ 958  STO 30
+ 959  1111111111111111111111111111111111111111111111111111111111111111#2
+ 960  STO 31
+ 961  0#2
+ 962  STO 32
       ; the formula is kept as letters a-p (the codes 0-15: p q r s t u ⊤ ⊥ ¬ ∧ ∨ ⊕ → ↔ ( )), plain ASCII, so
       ; αPOS, αSL and αLEFT count one character each; the glyphs only for the screen (LBL 74 + code)
-1007  "abcdefghijklmnop"
-1008  STO 46
-1009  "abcdef"
-1010  STO 90
-1011  "ijkmnl"
-1012  STO 91
-1013  "opgh"
-1014  STO 92
-1015  "pqrstu"
-1016  STO 93
-1017  1
-1018  STO 20
-1019  ">"
-1020  STO 21
-1021  0
-1022  STO 22
-1023  CLLCD
-1024  XEQ :LABELS:    (49)
-1025  RTN
-1026  END
+ 963  "abcdefghijklmnop"
+ 964  STO 46
+ 965  "abcdef"
+ 966  STO 90
+ 967  "ijkmnl"
+ 968  STO 91
+ 969  "opgh"
+ 970  STO 92
+ 971  "pqrstu"
+ 972  STO 93
+ 973  1
+ 974  STO 20
+ 975  ">"
+ 976  STO 21
+ 977  0
+ 978  STO 22
+ 979  CLLCD
+ 980  XEQ :LABELS:    (48)
+ 981  RTN
+ 982  END

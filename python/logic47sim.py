@@ -37,7 +37,6 @@ def run(ks, prog=PROG, stack=None):
     c = c47sim.load([prog])
     c.s = [D(v) for v in (stack or (0, 0, 0, 0))]; c.pix = []; c.keys = list(ks); c.steps = 0
     c.frames = []; c.at_steps = []
-    c.clock = 2461338.0                       # the calculator's clock (a JD): read by the standby check
     texts = []
     cls = type(c); orig = cls.atext
 

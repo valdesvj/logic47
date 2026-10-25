@@ -43,13 +43,11 @@ LOGIC47 local labels: name (programs_rem/LOGIC47.txt), number (build/LOGIC47.txt
 :TBF:      40  
 :TBL:      41  
 :TBK:      42  
-:TBW:      43  wait for a key (true: no key yet); no key: LBL :TBNK: (the standby check)
-:TBNK:     44  no key in the table: wait on, unless the calculator was in standby (LBL :WAKE:): then back
-:TBU:      45  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
-:TB1:      46  the formula is true in the row
-:TBH:      47  the header of the column of the place R48
-:SYNTAX:   48  the formula is not well formed
-:LABELS:   49  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
-:HINTS:    50  the keys (small font, row 26)
-:WAKE:     51  the standby check: the calculator's clock (JD, R97 the last pass's); more than 30 s since
-:INIT:     52  the words, the symbols, the pages, the screen
+:TBW:      43  wait for a key (true: no key yet)
+:TBU:      44  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
+:TB1:      45  the formula is true in the row
+:TBH:      46  the header of the column of the place R48
+:SYNTAX:   47  the formula is not well formed
+:LABELS:   48  the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns)
+:HINTS:    49  the keys (small font, row 26)
+:INIT:     50  the words, the symbols, the pages, the screen

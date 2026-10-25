@@ -29,10 +29,6 @@ contingency, gives a row where it is true and one where it is false.
 | 7 | clear the formula |
 | 0 | the end: the screen cleared, your stack and LASTx as they were |
 
-**Standby**: if the calculator goes to standby while LOGIC47 waits for a key, the key that wakes it ends the
-program cleanly (more than 30 s between two passes of the key wait: the clock is read at each one), so the
-calculator is back in its normal state. In the truth table it may take one more press.
-
 ## The answer
 
     TAUTOLOGY            true in 8 of 8 rows
