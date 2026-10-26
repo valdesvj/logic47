@@ -96,3 +96,11 @@
 1. Run on Victor's C47: the bitwise commands first.
 2. Ideas: show the truth table (scroll), equivalence of two formulas, normal forms (DNF / CNF), v w (7-8
    variables: two or four words).
+
+## Oct 26, 2026 - the forum file for new users (branch claude/logic47-forum)
+
+- The forum asked contributors for plain-English instructions in the .p47u ('@' lines, not '#': rejig makes a '#'
+  line a REM step) and local labels. build_forum.py: the '@' metadata, then tools/forum/LOGIC47.txt (What it is,
+  How to use it, What it changes on your calculator, Programs and labels), then the source's header as technical
+  notes; the comment blocks as whole '@' lines before their steps, label names after ';'. tools/build_p47.py (with
+  rejig on Victor's computer): build/p47/LOGIC47.p47, checked against the plain listing's. tests/test_forum.py.

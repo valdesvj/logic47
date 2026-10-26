@@ -72,7 +72,8 @@ A formula of 20 symbols is evaluated in about 2 500 steps in the simulator (abou
 | `programs_rem/LOGIC47.txt` | the commented source (STRUCT, named labels) — edit this one |
 | `programs/LOGIC47.txt`, `build/LOGIC47.txt` | the calculator program (to convert with rejig) |
 | `listings/` | numbered steps with comments, the local labels |
-| `build/forum/LOGIC47.p47u` | the same program as a commented rejig source: an `@` header (Index, Author, Version, Source, Tested, Input, Output), the steps indented, the comments after `;` (rejig drops them: no memory); written by the build (`tools/build_forum.py`), checked by `tests/test_forum.py` |
+| `build/forum/LOGIC47.p47u` | the file for the forum and the C47's PROGRAMS folder: the `@` metadata (Index, Author, Version, Source, Tested, Input, Output), how to use it in plain words (`tools/forum/LOGIC47.txt`), then the steps indented with the source's comments as `@` lines and the label names after `;` (rejig compiles neither: no memory, no REM step); written by the build (`tools/build_forum.py`), checked by `tests/test_forum.py` |
+| `tools/build_p47.py` | on your computer with rejig: `build/p47/LOGIC47.p47` from the forum file (`--validate=r47`), checked byte for byte against the plain listing's |
 | `python/c47sim.py`, `stdfont.py`, `tinyfont.py` | the C47 simulator and fonts, from Almanac 47; the bitwise commands added here |
 | `python/logic47sim.py` | runs LOGIC47 in the simulator, writes `docs/*.png` |
 | `tests/test_logic47.py` | the tests |
