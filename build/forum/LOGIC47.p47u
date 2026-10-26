@@ -9,17 +9,37 @@
 @ Output:  p->q (keys F1, 2 F4, 1 F2, 5): CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0, F: p=1 q=0;
 @ Output:  then 6: the table p q | Φ: 1 1 | 1, 1 0 | 0, 0 1 | 1, 0 0 | 1 (Φ the formula's value)
 @
-@ Logic 47: propositional logic on the C47 / R47. Variables p q r s t u, the constants true and false,
-@ not, and, or, exclusive or, implies, if and only if, brackets. 5 evaluates the formula: TAUTOLOGY,
-@ CONTRADICTION or CONTINGENCY, the number of true rows, and for a contingency a true and a false row.
-@ Each variable is a 64-bit word (one bit a row), so the formula is evaluated once with AND OR XOR NOT.
+@ ---- What it is ----
+@ Logic 47 checks a formula of propositional logic. You type a formula such as p -> (q v r) with the soft keys and
+@ the C47 tells you whether it is a TAUTOLOGY (always true), a CONTRADICTION (always false) or a CONTINGENCY
+@ (sometimes true), in how many rows of the truth table it is true, and gives one row where it is true and one
+@ where it is false. Key 6 then shows the whole truth table. Each variable is held as a 64-bit word, so the
+@ calculator evaluates all 64 rows at once with AND, OR, XOR and NOT: the answer comes in well under a second.
 @
-@ Keys: F1-F6 a symbol, 1 2 3 the page, 4 delete, 5 evaluate, 6 the truth table (after 5; up to 64 rows on one
-@ screen, any key back), 7 clear, 0 the end.
-@ Your stack and LASTx are kept (STOS / RCLS in local registers); the registers R20-R96 are cleared at the end.
-@ Needs a C47 / R47 firmware with ATEXT, GRFNT, the STRUCT commands and the bitwise commands (WSIZE 64).
-@ The comments after ';' say what each part does (rejig drops them: they take no memory).
+@ ---- How to use it ----
+@ Load LOGIC47 and press XEQ LOGIC47. The soft keys F1-F6 type the symbols of the page shown under the screen:
+@   1         page 1: the variables p q r s t u
+@   2         page 2: the connectives  not  and  or  implies  if-and-only-if  exclusive-or
+@   3         page 3: the brackets ( ), true (shown T) and false
+@   4         delete the last symbol            7   clear the formula
+@   5         evaluate: TAUTOLOGY, CONTRADICTION or CONTINGENCY, the true rows, and an example row of each kind;
+@             a formula that is not well formed gives SYNTAX ERROR
+@   6         after 5: the truth table (up to 64 rows on one screen, in blocks of 16); any key goes back
+@   0         the end
+@ Precedence, from the highest: not, and, or / exclusive-or, implies, if-and-only-if. So p v q ^ r is p v (q ^ r).
+@ "implies" groups to the right (p -> q -> r is p -> (q -> r)); the others to the left. Use brackets when in doubt.
+@ Example: p -> q (F1; 2 then F4; 1 then F2; 5) gives CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0, F: p=1 q=0.
 @
+@ ---- What it changes on your calculator ----
+@ Your stack and LASTx are given back at the end. Registers R00-R19 are not touched; R20-R96 are used and cleared
+@ at the end. WSIZE is set to 64 (the program needs 64-bit words). No variable, matrix or flag is left behind.
+@
+@ ---- Programs and labels ----
+@ One program, LOGIC47, with one global label (LOGIC47). The routines inside are local labels only (LBL 01-99;
+@ LBL 68-73 are the connectives, called with XEQ IND). It uses the STRUCT commands (DO / WHILE / ENDDO), ATEXT,
+@ GRFNT and the bitwise commands AND OR XOR NOT BS? BC? of the C47 / R47 firmware.
+@
+@ ---- Technical notes (from the commented source) ----
 @ LOGIC47 v0.2.0 - Logic 47: propositional logic on the C47 / R47
 @ A formula of up to six variables p q r s t u, the constants ⊤ ⊥ (drawn T ⊥), the connectives ¬ ∧ ∨ ⊕ (drawn ⊻) → ↔, brackets,
 @ keyed with the soft keys F1-F6 (three pages: 1 the variables, 2 the connectives, 3 the brackets and
@@ -46,13 +66,17 @@
 @
 
 LBL "LOGIC47"
-LocR 9                          ; the user's stack in the local registers: STOS R.00 (R.00-R.07, the 8 levels), then LASTx in R.08
+@ the user's stack in the local registers: STOS R.00 (R.00-R.07, the 8 levels), then LASTx in R.08
+LocR 9
 STOS R.00
 LASTx
 STO R.08
 XEQ 50                          ; -> :INIT:
-DO 01                           ; ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
-  DO 02                         ; 7 (52) clear, 0 end ----
+@
+@ ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
+@ 7 (52) clear, 0 end ----
+DO 01
+  DO 02
     PAUSE 50
     KEY? 23
   WHILE 02
@@ -69,7 +93,8 @@ WHILE 01
   71
   -
   STO 39
-  73                            ; 1 2 3: |key - 73| <= 1
+@   1 2 3: |key - 73| <= 1
+  73
   RCL 23
   -
   ABS
@@ -93,7 +118,9 @@ WHILE 01
   X=Y?
   XEQ 36                        ; -> :TABLE:
 ENDDO 01
-20.77                           ; ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+@
+@ ---- 0: the end: R20-R96 cleared, GRMOD 0, GRFNT 20, the screen; the user's stack and LASTx back ----
+20.77
 R-CLR
 0
 GRMOD
@@ -104,7 +131,9 @@ RCL R.08
 STO L
 RCLS R.00
 RTN
-LBL 00                          ; :FKEY:  ---- LBL :FKEY: F1-F6 (key 11-16; other keys below 17: nothing): the symbol n of the page appended ----
+@
+@ ---- LBL :FKEY: F1-F6 (key 11-16; other keys below 17: nothing): the symbol n of the page appended ----
+LBL 00                          ; :FKEY:
 RCL 23
 10
 -
@@ -117,14 +146,16 @@ RCL 20
 STO 40
 RCL IND 40
 STO 41
-"|"                             ; the page's text has fewer symbols than keys: nothing (its length: the place of a "|" put at its end)
+@ the page's text has fewer symbols than keys: nothing (its length: the place of a "|" put at its end)
+"|"
 x→α 41
 "|"
 αPOS 41
 RCL 39
 X>Y?
 RTN
-0                               ; the formula changes: no table until it is evaluated again
+@ the formula changes: no table until it is evaluated again
+0
 STO 96
 RCL IND 40
 STO 41
@@ -139,12 +170,16 @@ x→α 21
 STO+ 22
 XEQ 04                          ; -> :SHOWF:
 RTN
-LBL 01                          ; :PAGE:  ---- LBL :PAGE: the page R39 (1-3) and its soft-key labels ----
+@
+@ ---- LBL :PAGE: the page R39 (1-3) and its soft-key labels ----
+LBL 01                          ; :PAGE:
 RCL 39
 STO 20
 XEQ 48                          ; -> :LABELS:
 RTN
-LBL 02                          ; :DEL:  ---- LBL :DEL: the last symbol off (">" stays) ----
+@
+@ ---- LBL :DEL: the last symbol off (">" stays) ----
+LBL 02                          ; :DEL:
 RCL 22
 X=0?
 RTN
@@ -159,7 +194,9 @@ RCL 22
 STO 21
 XEQ 04                          ; -> :SHOWF:
 RTN
-LBL 03                          ; :CLEAR:  ---- LBL :CLEAR: the formula empty ----
+@
+@ ---- LBL :CLEAR: the formula empty ----
+LBL 03                          ; :CLEAR:
 0
 STO 96
 ">"
@@ -168,8 +205,11 @@ STO 21
 STO 22
 XEQ 04                          ; -> :SHOWF:
 RTN
-LBL 04                          ; :SHOWF:  ---- LBL :SHOWF: the formula (rows 36 up cleared: the result too; ATEXT goes on to the next line past x 380), the result
-36                              ; area cleared ----
+@
+@ ---- LBL :SHOWF: the formula (rows 36 up cleared: the result too; ATEXT goes on to the next line past x 380), the result
+@ area cleared ----
+LBL 04                          ; :SHOWF:
+36
 0
 CLLCDxy
 0
@@ -182,8 +222,10 @@ GRFNT
 ATEXT Z
 21
 GRFNT
-">"                             ; the glyphs: ">" then each code's glyph (LBL 74 + code), in R95; R94 the place (a LBL / DSE / GTO loop:
-STO 95                          ; the program has already the 10 DO of the original DM42)
+@ the glyphs: ">" then each code's glyph (LBL 74 + code), in R95; R94 the place (a LBL / DSE / GTO loop:
+@ the program has already the 10 DO of the original DM42)
+">"
+STO 95
 RCL 22
 X=0?
 GTO 06                          ; -> :SHOW2:
@@ -213,8 +255,11 @@ RCL 95
 6
 ATEXT Z
 RTN
-LBL 07                          ; :EVAL:  ---- LBL :EVAL: the formula evaluated on the words (shunting-yard: the values on R50-R69, the operators on
-49                              ; R70-R89), then LBL :VERDICT: ----
+@
+@ ---- LBL :EVAL: the formula evaluated on the words (shunting-yard: the values on R50-R69, the operators on
+@ R70-R89), then LBL :VERDICT: ----
+LBL 07                          ; :EVAL:
+49
 STO 35
 69
 STO 36
@@ -226,7 +271,8 @@ DO 03
   RCL 22
   X>Y?
 WHILE 03
-  1                             ; the symbol: R21 without its first R33 + 1 characters, the first one left; its code in R46
+@   the symbol: R21 without its first R33 + 1 characters, the first one left; its code in R46
+  1
   STO+ 33
   RCL 21
   STO 41
@@ -238,7 +284,8 @@ WHILE 03
   STO 38
   XEQ 08                        ; -> :TOKEN:
 ENDDO 03
-DO 04                           ; the operators left, then exactly one value
+@ the operators left, then exactly one value
+DO 04
   RCL 36
   69
   X<Y?
@@ -261,7 +308,9 @@ RCL 50
 STO 24
 XEQ 26                          ; -> :VERDICT:
 RTN
-LBL 08                          ; :TOKEN:  ---- LBL :TOKEN: the code R38: 0-7 a value, 8 ¬, 9-13 a binary connective, 14 (, 15 ) ----
+@
+@ ---- LBL :TOKEN: the code R38: 0-7 a value, 8 ¬, 9-13 a binary connective, 14 (, 15 ) ----
+LBL 08                          ; :TOKEN:
 RCL 38
 7
 X≥Y?
@@ -278,7 +327,8 @@ RCL 38
 15
 X=Y?
 XEQ 10                          ; -> :CLOSE:
-RCL 38                          ; 9-13: |c - 11| <= 2
+@ 9-13: |c - 11| <= 2
+RCL 38
 11
 -
 ABS
@@ -286,7 +336,8 @@ ABS
 X≥Y?
 XEQ 13                          ; -> :BINARY:
 RTN
-LBL 09                          ; :VALUE:  LBL :VALUE: the word of the variable or constant, R25 + code
+@ LBL :VALUE: the word of the variable or constant, R25 + code
+LBL 09                          ; :VALUE:
 RCL 38
 25
 +
@@ -294,7 +345,8 @@ STO 39
 RCL IND 39
 XEQ 20                          ; -> :PUSHV:
 RTN
-LBL 10                          ; :CLOSE:  LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
+@ LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
+LBL 10                          ; :CLOSE:
 DO 05
   XEQ 11                        ; -> :TOPC:
   14
@@ -308,7 +360,8 @@ RCL 36
 X<Y?
 XEQ 24                          ; -> :POPOP:
 RTN
-LBL 11                          ; :TOPC:  LBL :TOPC: the top operator's code in X; none: a syntax error and 14 (as if "(")
+@ LBL :TOPC: the top operator's code in X; none: a syntax error and 14 (as if "(")
+LBL 11                          ; :TOPC:
 RCL 36
 69
 X≥Y?
@@ -319,8 +372,11 @@ LBL 12                          ; :NOPEN:
 XEQ 25                          ; -> :ERR:
 14
 RTN
-LBL 13                          ; :BINARY:  ---- LBL :BINARY: a binary connective, the code R38 9-13 ----
-DO 06                           ; the operators on top with a higher precedence (or the same, for all but →) applied first
+@
+@ ---- LBL :BINARY: a binary connective, the code R38 9-13 ----
+LBL 13                          ; :BINARY:
+@ the operators on top with a higher precedence (or the same, for all but →) applied first
+DO 06
   XEQ 14                        ; -> :MORE:
   RCL 42
   X≠0?
@@ -331,8 +387,10 @@ ENDDO 06
 RCL 38
 XEQ 23                          ; -> :PUSHOP:
 RTN
-LBL 14                          ; :MORE:  LBL :MORE: R42 = 1 when the top operator (not "(") goes before the code R38: prec(top) > prec(c), or
-0                               ; equal and c is not →. prec: 543321 for the codes 8-13 (¬ ∧ ∨ ⊕ → ↔)
+@ LBL :MORE: R42 = 1 when the top operator (not "(") goes before the code R38: prec(top) > prec(c), or
+@ equal and c is not →. prec: 543321 for the codes 8-13 (¬ ∧ ∨ ⊕ → ↔)
+LBL 14                          ; :MORE:
+0
 STO 42
 RCL 36
 69
@@ -362,7 +420,8 @@ LBL 15                          ; :YES:
 1
 STO 42
 RTN
-LBL 16                          ; :PREC:  LBL :PREC: the precedence of the code in X (8-13)
+@ LBL :PREC: the precedence of the code in X (8-13)
+LBL 16                          ; :PREC:
 13
 X<>Y
 -
@@ -376,11 +435,14 @@ IP
 10
 MOD
 RTN
-LBL 17                          ; :APPLY2:  LBL :APPLY2: the operator R39 (an unmatched "(" left out)
+@ LBL :APPLY2: the operator R39 (an unmatched "(" left out)
+LBL 17                          ; :APPLY2:
 RCL 39
 XEQ 18                          ; -> :APPLY:
 RTN
-LBL 18                          ; :APPLY:  ---- LBL :APPLY: the operator X (8-13) on the values: ¬ one, the others two (LBL 68-73) ----
+@
+@ ---- LBL :APPLY: the operator X (8-13) on the values: ¬ one, the others two (LBL 68-73) ----
+LBL 18                          ; :APPLY:
 60
 +
 STO 45
@@ -421,14 +483,18 @@ XOR
 NOT
 XEQ 20                          ; -> :PUSHV:
 RTN
-LBL 19                          ; :POP2:  LBL :POP2: Y = the first value, X = the second
+@ LBL :POP2: Y = the first value, X = the second
+LBL 19                          ; :POP2:
 XEQ 21                          ; -> :POPV:
 STO 39
 XEQ 21                          ; -> :POPV:
 RCL 39
 RTN
-LBL 20                          ; :PUSHV:  ---- the stacks: LBL :PUSHV: X on the values, LBL :POPV: the top value in X (none: a syntax error and 0);
-1                               ; LBL :PUSHOP: X on the operators, LBL :POPOP: the top operator in X ----
+@
+@ ---- the stacks: LBL :PUSHV: X on the values, LBL :POPV: the top value in X (none: a syntax error and 0);
+@ LBL :PUSHOP: X on the operators, LBL :POPOP: the top operator in X ----
+LBL 20                          ; :PUSHV:
+1
 STO+ 35
 R↓
 STO IND 35
@@ -443,7 +509,8 @@ RCL IND 35
 STO- 35
 R↓
 RTN
-LBL 22                          ; :EMPTY:  LBL :EMPTY: a value is missing: a syntax error, and a 0 pushed for it
+@ LBL :EMPTY: a value is missing: a syntax error, and a 0 pushed for it
+LBL 22                          ; :EMPTY:
 XEQ 25                          ; -> :ERR:
 0
 XEQ 20                          ; -> :PUSHV:
@@ -464,11 +531,15 @@ LBL 25                          ; :ERR:
 1
 STO 37
 RTN
-LBL 26                          ; :VERDICT:  ---- LBL :VERDICT: the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
-RCL 37                          ; down to 0: BS? IND 45); R40 the variables used (n), R41 2^(6 - n) ----
+@
+@ ---- LBL :VERDICT: the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
+@ down to 0: BS? IND 45); R40 the variables used (n), R41 2^(6 - n) ----
+LBL 26                          ; :VERDICT:
+RCL 37
 X≠0?
 GTO 47                          ; -> :SYNTAX:
-1                               ; a result word in R24: key 6 may show its table
+@ a result word in R24: key 6 may show its table
+1
 STO 96
 0
 STO 47
@@ -491,7 +562,8 @@ DO 07
   DSE 44
 WHILE 07
 ENDDO 07
-0                               ; the variables used: n = how many of p..u are in the formula
+@ the variables used: n = how many of p..u are in the formula
+0
 STO 40
 6
 STO 44
@@ -513,8 +585,10 @@ RCL 47
 X<>Y
 ÷
 STO 47
-1                               ; the screen: the verdict (row 100), the rows (80), the true and the false example (60, 40: one line each,
-GRMOD                           ; six variables do not fit on one)
+@ the screen: the verdict (row 100), the rows (80), the true and the false example (60, 40: one line each,
+@ six variables do not fit on one)
+1
+GRMOD
 "                                                  "
 100
 6
@@ -545,7 +619,8 @@ RCL 34
 100
 6
 ATEXT Z
-"true in "                      ; the rows: "true in 3 of 4 rows"
+@ the rows: "true in 3 of 4 rows"
+"true in "
 STO 34
 RCL 47
 αIP 34
@@ -561,7 +636,8 @@ RCL 34
 80
 6
 ATEXT Z
-RCL 47                          ; a contingency: a true row and a false row (the variables used only)
+@ a contingency: a true row and a false row (the variables used only)
+RCL 47
 X=0?
 RTN
 RCL 49
@@ -584,7 +660,8 @@ RCL 34
 6
 ATEXT Z
 RTN
-LBL 27                          ; :TRUE:  LBL :TRUE:, LBL :FALSE: bit R45 is 1 / 0
+@ LBL :TRUE:, LBL :FALSE: bit R45 is 1 / 0
+LBL 27                          ; :TRUE:
 1
 STO+ 47
 RCL 45
@@ -606,7 +683,8 @@ LBL 31                          ; :TAUT:
 "TAUTOLOGY"
 STO 34
 RTN
-LBL 32                          ; :USED?:  LBL :USED?: R39 = the place of the variable 6 - R44 (p first) in the formula, -1 when not there
+@ LBL :USED?: R39 = the place of the variable 6 - R44 (p first) in the formula, -1 when not there
+LBL 32                          ; :USED?:
 6
 RCL 44
 -
@@ -620,7 +698,8 @@ RCL 39
 αPOS 21
 STO 39
 RTN
-LBL 33                          ; :ROW:  LBL :ROW: the values of the variables used in row X: "p=1 q=0 " appended to R34
+@ LBL :ROW: the values of the variables used in row X: "p=1 q=0 " appended to R34
+LBL 33                          ; :ROW:
 STO 45
 6
 STO 44
@@ -633,7 +712,8 @@ DO 09
 WHILE 09
 ENDDO 09
 RTN
-LBL 34                          ; :VAR:  LBL :VAR: "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
+@ LBL :VAR: "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
+LBL 34                          ; :VAR:
 RCL 93
 STO 42
 6
@@ -660,15 +740,25 @@ LBL 35                          ; :ONE:
 "=1 "
 STO 42
 RTN
-LBL 36                          ; :TABLE:  ---- LBL :TABLE: key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font: the
-RCL 96                          ; formula on top, then 2^n rows (up to 64: four columns of 16), each "1 0 1 | 1" (the variables in the order
-X=0?                            ; p..u, the first one changing slowest, all true first; then the formula's value Φ), a header over each column,
-RTN                             ; BLOCK 1-4 under the columns (when there are more than one).
-CLLCD                           ; Row k (2^n - 1 down to 0): the j-th variable used takes bit n - 1 - j of k; the bit of the word R24 to read is
-0                               ; m = the sum of 2^code over the variables true in the row (code 0-5: p-u, bit i of row m is variable i).
-GRMOD                           ; Any key goes back: the formula, the soft keys and the verdict drawn again. LBL / DSE / GTO loops (10 DO already).
-21                              ; R47 ">" then the code letters of the variables used, R34 the header, R40 n, R41 the rows left (2^n down to 1),
-GRFNT                           ; R38 k, R43 j (n down to 1), R45 m, R48 the row's place (0 up), R33 the row's text, R49 a bit, R42 work ----
+@
+@ ---- LBL :TABLE: key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font: the
+@ formula on top, then 2^n rows (up to 64: four columns of 16), each "1 0 1 | 1" (the variables in the order
+@ p..u, the first one changing slowest, all true first; then the formula's value Φ), a header over each column,
+@ BLOCK 1-4 under the columns (when there are more than one).
+@ Row k (2^n - 1 down to 0): the j-th variable used takes bit n - 1 - j of k; the bit of the word R24 to read is
+@ m = the sum of 2^code over the variables true in the row (code 0-5: p-u, bit i of row m is variable i).
+@ Any key goes back: the formula, the soft keys and the verdict drawn again. LBL / DSE / GTO loops (10 DO already).
+@ R47 ">" then the code letters of the variables used, R34 the header, R40 n, R41 the rows left (2^n down to 1),
+@ R38 k, R43 j (n down to 1), R45 m, R48 the row's place (0 up), R33 the row's text, R49 a bit, R42 work ----
+LBL 36                          ; :TABLE:
+RCL 96
+X=0?
+RTN
+CLLCD
+0
+GRMOD
+21
+GRFNT
 RCL 95
 212
 6
@@ -690,7 +780,8 @@ X≥0?
 XEQ 44                          ; -> :TBU:
 DSE 44
 GTO 37                          ; -> :TBV:
-"| Φ"                           ; the formula's value: Φ (capital phi, the usual letter for a formula; the small font has it)
+@ the formula's value: Φ (capital phi, the usual letter for a formula; the small font has it)
+"| Φ"
 x→α 34
 2
 RCL 40
@@ -698,7 +789,8 @@ Y^X
 STO 41
 0
 STO 48
-LBL 38                          ; :TBR:  each row: k = R41 - 1, its digits and m
+@ each row: k = R41 - 1, its digits and m
+LBL 38                          ; :TBR:
 RCL 41
 1
 -
@@ -712,7 +804,8 @@ STO 43
 X=0?
 GTO 40                          ; -> :TBF:
 LBL 39                          ; :TBB:
-RCL 38                          ; the bit of k for the variable n - j (the first one: the highest bit)
+@ the bit of k for the variable n - j (the first one: the highest bit)
+RCL 38
 2
 RCL 43
 1
@@ -726,7 +819,8 @@ STO 49
 αIP 33
 " "
 x→α 33
-RCL 47                          ; its code (the place of its letter in R46, 0-5): m + bit × 2^code
+@ its code (the place of its letter in R46, 0-5): m + bit × 2^code
+RCL 47
 STO 42
 RCL 40
 RCL 43
@@ -746,15 +840,18 @@ STO+ 45
 DSE 43
 GTO 39                          ; -> :TBB:
 LBL 40                          ; :TBF:
-"| 0"                           ; the formula's value in row m: bit m of the result word
+@ the formula's value in row m: bit m of the result word
+"| 0"
 STO 42
 RCL 24
 BS? IND 45
 XEQ 45                          ; -> :TB1:
 RCL 42
 x→α 33
-RCL 48                          ; the place: column IP(place / 16) at x 2 + 99 c (the text starts with a space), line place mod 16; a header
-16                              ; over each column
+@ the place: column IP(place / 16) at x 2 + 99 c (the text starts with a space), line place mod 16; a header
+@ over each column
+RCL 48
+16
 MOD
 X=0?
 XEQ 46                          ; -> :TBH:
@@ -780,7 +877,8 @@ ATEXT Z
 STO+ 48
 DSE 41
 GTO 38                          ; -> :TBR:
-2                               ; under each block of 16 rows (5 or 6 variables: 2 or 4 blocks): " BLOCK 1" ... at row 32
+@ under each block of 16 rows (5 or 6 variables: 2 or 4 blocks): " BLOCK 1" ... at row 32
+2
 RCL 40
 Y^X
 16
@@ -811,17 +909,20 @@ LBL 42                          ; :TBK:
 4
 8
 ATEXT Z
-LBL 43                          ; :TBW:  wait for a key (true: no key yet)
+@ wait for a key (true: no key yet)
+LBL 43                          ; :TBW:
 PAUSE 50
 KEY? 23
 GTO 43                          ; -> :TBW:
-CLLCD                           ; back: the formula, the soft keys, the verdict
+@ back: the formula, the soft keys, the verdict
+CLLCD
 21
 GRFNT
 XEQ 48                          ; -> :LABELS:
 XEQ 26                          ; -> :VERDICT:
 RTN
-LBL 44                          ; :TBU:  LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
+@ LBL :TBU: the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the header R34
+LBL 44                          ; :TBU:
 1
 STO+ 40
 RCL 46
@@ -844,11 +945,13 @@ x→α 34
 " "
 x→α 34
 RTN
-LBL 45                          ; :TB1:  LBL :TB1: the formula is true in the row
+@ LBL :TB1: the formula is true in the row
+LBL 45                          ; :TB1:
 "| 1"
 STO 42
 RTN
-LBL 46                          ; :TBH:  LBL :TBH: the header of the column of the place R48
+@ LBL :TBH: the header of the column of the place R48
+LBL 46                          ; :TBH:
 RCL 34
 190
 RCL 48
@@ -861,7 +964,9 @@ IP
 +
 ATEXT Z
 RTN
-LBL 74                          ; glyph of code 0 (letter a): p  ---- LBL 74-89: the glyph of the code 0-15 ----
+@
+@ ---- LBL 74-89: the glyph of the code 0-15 ----
+LBL 74                          ; glyph of code 0 (letter a): p
 "p"
 RTN
 LBL 75                          ; glyph of code 1 (letter b): q
@@ -880,7 +985,8 @@ LBL 79                          ; glyph of code 5 (letter f): u
 "u"
 RTN
 LBL 80                          ; glyph of code 6 (letter g): true (drawn T)
-"T"                             ; true drawn as a plain T: the font's ⊤ is the small raised transpose T
+@ true drawn as a plain T: the font's ⊤ is the small raised transpose T
+"T"
 RTN
 LBL 81                          ; glyph of code 7 (letter h): false
 "⊥"
@@ -895,7 +1001,8 @@ LBL 84                          ; glyph of code 10 (letter k): or
 "∨"
 RTN
 LBL 85                          ; glyph of code 11 (letter l): exclusive or (drawn ⊻)
-"⊻"                             ; exclusive or drawn as ⊻ (on the line as ∨): the font's ⊕ sits low, rows 10-20 of the cell
+@ exclusive or drawn as ⊻ (on the line as ∨): the font's ⊕ sits low, rows 10-20 of the cell
+"⊻"
 RTN
 LBL 86                          ; glyph of code 12 (letter m): implies
 "→"
@@ -909,7 +1016,8 @@ RTN
 LBL 89                          ; glyph of code 15 (letter p): )
 ")"
 RTN
-LBL 47                          ; :SYNTAX:  LBL :SYNTAX: the formula is not well formed
+@ LBL :SYNTAX: the formula is not well formed
+LBL 47                          ; :SYNTAX:
 0
 STO 96
 1
@@ -925,8 +1033,11 @@ GRMOD
 6
 ATEXT Z
 RTN
-LBL 48                          ; :LABELS:  ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
-1                               ; the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
+@
+@ ---- LBL :LABELS: the soft-key labels of the page R20 (six, page 3 four) (rows 0-19, one per 66 columns) ----
+LBL 48                          ; :LABELS:
+@ the old labels cleared by spaces in GRMOD 1 (54 x 7 columns)
+1
 GRMOD
 21
 GRFNT
@@ -942,8 +1053,10 @@ RCL 20
 STO 40
 RCL IND 40
 STO 41
-STO 42                          ; as many labels as the page has symbols (page 3: four): its length, the place of a "|" put at its end
-"|"                             ; (αSL / αLEFT past the end of a text is an error on the C47); R45 the length, R44 counts down
+@ as many labels as the page has symbols (page 3: four): its length, the place of a "|" put at its end
+@ (αSL / αLEFT past the end of a text is an error on the C47); R45 the length, R44 counts down
+STO 42
+"|"
 x→α 42
 "|"
 αPOS 42
@@ -977,7 +1090,8 @@ ENDDO 10
 XEQ 49                          ; -> :HINTS:
 XEQ 04                          ; -> :SHOWF:
 RTN
-LBL 49                          ; :HINTS:  LBL :HINTS: the keys (small font, row 26)
+@ LBL :HINTS: the keys (small font, row 26)
+LBL 49                          ; :HINTS:
 10
 GRFNT
 "1 VAR  2 OP  3 ( ) T F  4 DEL  5 EVAL  6 TABLE  7 CLEAR  0 END"
@@ -987,11 +1101,14 @@ ATEXT Z
 21
 GRFNT
 RTN
-LBL 50                          ; :INIT:  ---- LBL :INIT: the words, the symbols, the pages, the screen ----
+@
+@ ---- LBL :INIT: the words, the symbols, the pages, the screen ----
+LBL 50                          ; :INIT:
 WSIZE 64
 0
 STO 96
-1010101010101010101010101010101010101010101010101010101010101010#2  ; p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
+@ p q r s t u: bit k = bit 0..5 of k; ⊤ all ones, ⊥ none
+1010101010101010101010101010101010101010101010101010101010101010#2
 STO 25
 1100110011001100110011001100110011001100110011001100110011001100#2
 STO 26
@@ -1007,8 +1124,10 @@ STO 30
 STO 31
 0#2
 STO 32
-"abcdefghijklmnop"              ; the formula is kept as letters a-p (the codes 0-15: p q r s t u ⊤ ⊥ ¬ ∧ ∨ ⊕ → ↔ ( )), plain ASCII, so
-STO 46                          ; αPOS, αSL and αLEFT count one character each; the glyphs only for the screen (LBL 74 + code)
+@ the formula is kept as letters a-p (the codes 0-15: p q r s t u ⊤ ⊥ ¬ ∧ ∨ ⊕ → ↔ ( )), plain ASCII, so
+@ αPOS, αSL and αLEFT count one character each; the glyphs only for the screen (LBL 74 + code)
+"abcdefghijklmnop"
+STO 46
 "abcdef"
 STO 90
 "ijkmnl"

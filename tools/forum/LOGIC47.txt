@@ -1,0 +1,29 @@
+---- What it is ----
+Logic 47 checks a formula of propositional logic. You type a formula such as p -> (q v r) with the soft keys and
+the C47 tells you whether it is a TAUTOLOGY (always true), a CONTRADICTION (always false) or a CONTINGENCY
+(sometimes true), in how many rows of the truth table it is true, and gives one row where it is true and one
+where it is false. Key 6 then shows the whole truth table. Each variable is held as a 64-bit word, so the
+calculator evaluates all 64 rows at once with AND, OR, XOR and NOT: the answer comes in well under a second.
+
+---- How to use it ----
+Load LOGIC47 and press XEQ LOGIC47. The soft keys F1-F6 type the symbols of the page shown under the screen:
+  1         page 1: the variables p q r s t u
+  2         page 2: the connectives  not  and  or  implies  if-and-only-if  exclusive-or
+  3         page 3: the brackets ( ), true (shown T) and false
+  4         delete the last symbol            7   clear the formula
+  5         evaluate: TAUTOLOGY, CONTRADICTION or CONTINGENCY, the true rows, and an example row of each kind;
+            a formula that is not well formed gives SYNTAX ERROR
+  6         after 5: the truth table (up to 64 rows on one screen, in blocks of 16); any key goes back
+  0         the end
+Precedence, from the highest: not, and, or / exclusive-or, implies, if-and-only-if. So p v q ^ r is p v (q ^ r).
+"implies" groups to the right (p -> q -> r is p -> (q -> r)); the others to the left. Use brackets when in doubt.
+Example: p -> q (F1; 2 then F4; 1 then F2; 5) gives CONTINGENCY, true in 3 of 4 rows, T: p=0 q=0, F: p=1 q=0.
+
+---- What it changes on your calculator ----
+Your stack and LASTx are given back at the end. Registers R00-R19 are not touched; R20-R96 are used and cleared
+at the end. WSIZE is set to 64 (the program needs 64-bit words). No variable, matrix or flag is left behind.
+
+---- Programs and labels ----
+One program, LOGIC47, with one global label (LOGIC47). The routines inside are local labels only (LBL 01-99;
+LBL 68-73 are the connectives, called with XEQ IND). It uses the STRUCT commands (DO / WHILE / ENDDO), ATEXT,
+GRFNT and the bitwise commands AND OR XOR NOT BS? BC? of the C47 / R47 firmware.
