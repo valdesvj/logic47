@@ -5,44 +5,44 @@ LOGIC47 local labels: name (programs_rem/LOGIC47.txt), number (build/LOGIC47.txt
 :DEL:      02  the last symbol off (">" stays)
 :CLEAR:    03  the formula empty
 :SHOWF:    04  the formula (rows 36 up cleared: the result too; ATEXT goes on to the next line past x 380
-:SHOW1:    05  
-:SHOW2:    06  
+:SHOW1:    05  the formula from its symbol R94 on (the part that fits the line)
+:SHOW2:    06  the page's hint line R95 at the bottom
 :EVAL:     07  the formula evaluated on the words (shunting-yard: the values on R50-R69, the operators on
 :TOKEN:    08  the code R38: 0-7 a value, 8 ¬, 9-13 a binary connective, 14 (, 15 )
 :VALUE:    09  the word of the variable or constant, R25 + code
 :CLOSE:    10  ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
 :TOPC:     11  the top operator's code in X; none: a syntax error and 14 (as if "(")
-:NOPEN:    12  
+:NOPEN:    12  no "(" on the operator stack: a syntax error, X = 14 (the code of ")")
 :BINARY:   13  a binary connective, the code R38 9-13
 :MORE:     14  R42 = 1 when the top operator (not "(") goes before the code R38: prec(top) > prec(c), or
-:YES:      15  
+:YES:      15  R42 = 1 (the operator on top is applied first)
 :PREC:     16  the precedence of the code in X (8-13)
 :APPLY2:   17  the operator R39 (an unmatched "(" left out)
 :APPLY:    18  the operator X (8-13) on the values: ¬ one, the others two (LBL 68-73)
 :POP2:     19  Y = the first value, X = the second
 :PUSHV:    20  the stacks: LBL :PUSHV: X on the values, LBL :POPV: the top value in X (none: a syntax err
-:POPV:     21  
+:POPV:     21  X = the value word on top of the value stack (R50 up), taken off; empty: a syntax error
 :EMPTY:    22  a value is missing: a syntax error, and a 0 pushed for it
-:PUSHOP:   23  
-:POPOP:    24  
-:ERR:      25  
+:PUSHOP:   23  X (an operator's code) onto the operator stack (R70 up)
+:POPOP:    24  X = the operator on top of the operator stack, taken off
+:ERR:      25  a syntax error (R37 = 1)
 :VERDICT:  26  the result. R47 the set bits, R48 the lowest true row, R49 the lowest false row (bit 63
 :TRUE:     27  , LBL :FALSE: bit R45 is 1 / 0
-:FALSE:    28  
-:INC40:    29  
-:CONTRA:   30  
-:TAUT:     31  
+:FALSE:    28  row R45 is false: kept as the lowest false row so far (R49)
+:INC40:    29  one more variable used (R40 + 1)
+:CONTRA:   30  the verdict text CONTRADICTION
+:TAUT:     31  the verdict text TAUTOLOGY
 :USED?:    32  LBL :USED?: R39 = the place of the variable 6 - R44 (p first) in the formula, -1 when not 
 :ROW:      33  the values of the variables used in row X: "p=1 q=0 " appended to R34
 :VAR:      34  "p=1 " for the variable 6 - R44 in row R45 (its word's bit)
-:ONE:      35  
+:ONE:      35  "=1 " (the variable is true in this row)
 :TABLE:    36  key 6 after a verdict (R96 = 1): the truth table of the variables used, in the small font:
-:TBV:      37  
+:TBV:      37  the loop over the variables p..u (R44 = 6 down to 1): each one used gets its column header
 :TBR:      38  each row: k = R41 - 1, its digits and m
-:TBB:      39  
-:TBF:      40  
-:TBL:      41  
-:TBK:      42  
+:TBB:      39  the loop over the variables used (R43 down to 1): its 0 or 1 in row k
+:TBF:      40  the row's end: "| " and the formula's value
+:TBL:      41  the loop over the blocks of 16 rows (R41 down to 1): "BLOCK n" under each column
+:TBK:      42  ANY KEY: BACK, then the key wait
 :TBW:      43  wait for a key (true: no key yet)
 :TBU:      44  the variable 6 - R44 is used: n + 1, its code letter to R47, its name and a space to the h
 :TB1:      45  the formula is true in the row

@@ -31,6 +31,7 @@ XEQ :INIT:
 REM ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
 REM 7 (52) clear, 0 end ----
 DO
+  REM the key wait: PAUSE 50 shows the screen, KEY? 23 reads the key
   DO
     PAUSE 50
     KEY? 23
@@ -179,6 +180,7 @@ RCL 22
 X=0?
 GTO :SHOW2:
 STO 94
+REM LBL :SHOW1: the formula from its symbol R94 on (the part that fits the line)
 LBL :SHOW1:
 RCL 21
 STO 41
@@ -198,6 +200,7 @@ XEQ IND 41
 x→α 95
 DSE 94
 GTO :SHOW1:
+REM LBL :SHOW2: the page's hint line R95 at the bottom
 LBL :SHOW2:
 RCL 95
 200
@@ -214,6 +217,7 @@ STO 36
 0
 STO 37
 STO 33
+REM the formula symbol by symbol (R33 the place, until R22, its length): each value, operator or bracket in turn
 DO
   RCL 33
   RCL 22
@@ -294,6 +298,7 @@ XEQ :PUSHV:
 RTN
 REM LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
 LBL :CLOSE:
+REM the operators on top applied, one a round, until the "(" (code 14)
 DO
   XEQ :TOPC:
   14
@@ -315,6 +320,7 @@ X≥Y?
 GTO :NOPEN:
 RCL IND 36
 RTN
+REM LBL :NOPEN: no "(" on the operator stack: a syntax error, X = 14 (the code of ")")
 LBL :NOPEN:
 XEQ :ERR:
 14
@@ -362,6 +368,7 @@ RCL 38
 X≠Y?
 XEQ :YES:
 RTN
+REM LBL :YES: R42 = 1 (the operator on top is applied first)
 LBL :YES:
 1
 STO 42
@@ -443,6 +450,7 @@ STO+ 35
 R↓
 STO IND 35
 RTN
+REM LBL :POPV: X = the value word on top of the value stack (R50 up), taken off; empty: a syntax error
 LBL :POPV:
 RCL 35
 49
@@ -459,18 +467,21 @@ XEQ :ERR:
 0
 XEQ :PUSHV:
 RTN
+REM LBL :PUSHOP: X (an operator's code) onto the operator stack (R70 up)
 LBL :PUSHOP:
 1
 STO+ 36
 R↓
 STO IND 36
 RTN
+REM LBL :POPOP: X = the operator on top of the operator stack, taken off
 LBL :POPOP:
 RCL IND 36
 1
 STO- 36
 R↓
 RTN
+REM LBL :ERR: a syntax error (R37 = 1)
 LBL :ERR:
 1
 STO 37
@@ -491,6 +502,7 @@ STO 48
 STO 49
 64
 STO 44
+REM the 64 bits of the result word, R44 = 64 down to 1 (bit R44 - 1): the true ones counted, the lowest true and false rows kept
 DO
   RCL 44
   1
@@ -510,6 +522,7 @@ REM the variables used: n = how many of p..u are in the formula
 STO 40
 6
 STO 44
+REM the six variables p..u (R44 = 6 down to 1): those in the formula counted (R40)
 DO
   XEQ :USED?:
   RCL 39
@@ -610,18 +623,22 @@ STO+ 47
 RCL 45
 STO 48
 RTN
+REM LBL :FALSE: row R45 is false: kept as the lowest false row so far (R49)
 LBL :FALSE:
 RCL 45
 STO 49
 RTN
+REM LBL :INC40: one more variable used (R40 + 1)
 LBL :INC40:
 1
 STO+ 40
 RTN
+REM LBL :CONTRA: the verdict text CONTRADICTION
 LBL :CONTRA:
 "CONTRADICTION"
 STO 34
 RTN
+REM LBL :TAUT: the verdict text TAUTOLOGY
 LBL :TAUT:
 "TAUTOLOGY"
 STO 34
@@ -646,6 +663,7 @@ LBL :ROW:
 STO 45
 6
 STO 44
+REM the six variables (R44 = 6 down to 1): each one used gets "p=1 " or "p=0 " for row R45
 DO
   XEQ :USED?:
   RCL 39
@@ -679,6 +697,7 @@ XEQ :ONE:
 RCL 42
 x→α 34
 RTN
+REM LBL :ONE: "=1 " (the variable is true in this row)
 LBL :ONE:
 "=1 "
 STO 42
@@ -715,6 +734,7 @@ STO 34
 STO 40
 6
 STO 44
+REM LBL :TBV: the loop over the variables p..u (R44 = 6 down to 1): each one used gets its column header
 LBL :TBV:
 XEQ :USED?:
 RCL 39
@@ -745,6 +765,7 @@ RCL 40
 STO 43
 X=0?
 GTO :TBF:
+REM LBL :TBB: the loop over the variables used (R43 down to 1): its 0 or 1 in row k
 LBL :TBB:
 REM the bit of k for the variable n - j (the first one: the highest bit)
 RCL 38
@@ -781,6 +802,7 @@ RCL 49
 STO+ 45
 DSE 43
 GTO :TBB:
+REM LBL :TBF: the row's end: "| " and the formula's value
 LBL :TBF:
 REM the formula's value in row m: bit m of the result word
 "| 0"
@@ -829,6 +851,7 @@ STO 41
 1
 X≥Y?
 GTO :TBK:
+REM LBL :TBL: the loop over the blocks of 16 rows (R41 down to 1): "BLOCK n" under each column
 LBL :TBL:
 " BLOCK "
 STO 33
@@ -846,6 +869,7 @@ RCL 41
 ATEXT Z
 DSE 41
 GTO :TBL:
+REM LBL :TBK: ANY KEY: BACK, then the key wait
 LBL :TBK:
 "ANY KEY: BACK"
 4
@@ -1002,6 +1026,7 @@ x→α 42
 αPOS 42
 STO 45
 STO 44
+REM each symbol of the page (R44 counts down): its glyph label (74 + code) written over its soft key
 DO
   RCL 41
   STO 42

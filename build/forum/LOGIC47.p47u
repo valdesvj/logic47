@@ -65,7 +65,7 @@
 @ level; tools/build_logic47.py checks them and numbers them.
 @
 
-LBL "LOGIC47"
+LBL "LOGIC47"                   ; LOGIC47 - the start (the narrative above says what it does and how to use it)
 @ the user's stack in the local registers: STOS R.00 (R.00-R.07, the 8 levels), then LASTx in R.08
 LocR 9
 STOS R.00
@@ -76,6 +76,7 @@ XEQ 50                          ; -> :INIT:
 @ ---- keys: F1-F6 (11-16), 1 2 3 (72 73 74) the page, 4 (62) delete, 5 (63) evaluate, 6 (64) the truth table,
 @ 7 (52) clear, 0 end ----
 DO 01
+@   the key wait: PAUSE 50 shows the screen, KEY? 23 reads the key
   DO 02
     PAUSE 50
     KEY? 23
@@ -230,6 +231,7 @@ RCL 22
 X=0?
 GTO 06                          ; -> :SHOW2:
 STO 94
+@ LBL :SHOW1: the formula from its symbol R94 on (the part that fits the line)
 LBL 05                          ; :SHOW1:
 RCL 21
 STO 41
@@ -249,6 +251,7 @@ XEQ IND 41
 x→α 95
 DSE 94
 GTO 05                          ; -> :SHOW1:
+@ LBL :SHOW2: the page's hint line R95 at the bottom
 LBL 06                          ; :SHOW2:
 RCL 95
 200
@@ -266,6 +269,7 @@ STO 36
 0
 STO 37
 STO 33
+@ the formula symbol by symbol (R33 the place, until R22, its length): each value, operator or bracket in turn
 DO 03
   RCL 33
   RCL 22
@@ -347,6 +351,7 @@ XEQ 20                          ; -> :PUSHV:
 RTN
 @ LBL :CLOSE: ")": the operators applied down to "(", which goes; no "(": a syntax error (LBL :TOPC:)
 LBL 10                          ; :CLOSE:
+@ the operators on top applied, one a round, until the "(" (code 14)
 DO 05
   XEQ 11                        ; -> :TOPC:
   14
@@ -368,6 +373,7 @@ X≥Y?
 GTO 12                          ; -> :NOPEN:
 RCL IND 36
 RTN
+@ LBL :NOPEN: no "(" on the operator stack: a syntax error, X = 14 (the code of ")")
 LBL 12                          ; :NOPEN:
 XEQ 25                          ; -> :ERR:
 14
@@ -416,6 +422,7 @@ RCL 38
 X≠Y?
 XEQ 15                          ; -> :YES:
 RTN
+@ LBL :YES: R42 = 1 (the operator on top is applied first)
 LBL 15                          ; :YES:
 1
 STO 42
@@ -499,6 +506,7 @@ STO+ 35
 R↓
 STO IND 35
 RTN
+@ LBL :POPV: X = the value word on top of the value stack (R50 up), taken off; empty: a syntax error
 LBL 21                          ; :POPV:
 RCL 35
 49
@@ -515,18 +523,21 @@ XEQ 25                          ; -> :ERR:
 0
 XEQ 20                          ; -> :PUSHV:
 RTN
+@ LBL :PUSHOP: X (an operator's code) onto the operator stack (R70 up)
 LBL 23                          ; :PUSHOP:
 1
 STO+ 36
 R↓
 STO IND 36
 RTN
+@ LBL :POPOP: X = the operator on top of the operator stack, taken off
 LBL 24                          ; :POPOP:
 RCL IND 36
 1
 STO- 36
 R↓
 RTN
+@ LBL :ERR: a syntax error (R37 = 1)
 LBL 25                          ; :ERR:
 1
 STO 37
@@ -548,6 +559,7 @@ STO 48
 STO 49
 64
 STO 44
+@ the 64 bits of the result word, R44 = 64 down to 1 (bit R44 - 1): the true ones counted, the lowest true and false rows kept
 DO 07
   RCL 44
   1
@@ -567,6 +579,7 @@ ENDDO 07
 STO 40
 6
 STO 44
+@ the six variables p..u (R44 = 6 down to 1): those in the formula counted (R40)
 DO 08
   XEQ 32                        ; -> :USED?:
   RCL 39
@@ -667,18 +680,22 @@ STO+ 47
 RCL 45
 STO 48
 RTN
+@ LBL :FALSE: row R45 is false: kept as the lowest false row so far (R49)
 LBL 28                          ; :FALSE:
 RCL 45
 STO 49
 RTN
+@ LBL :INC40: one more variable used (R40 + 1)
 LBL 29                          ; :INC40:
 1
 STO+ 40
 RTN
+@ LBL :CONTRA: the verdict text CONTRADICTION
 LBL 30                          ; :CONTRA:
 "CONTRADICTION"
 STO 34
 RTN
+@ LBL :TAUT: the verdict text TAUTOLOGY
 LBL 31                          ; :TAUT:
 "TAUTOLOGY"
 STO 34
@@ -703,6 +720,7 @@ LBL 33                          ; :ROW:
 STO 45
 6
 STO 44
+@ the six variables (R44 = 6 down to 1): each one used gets "p=1 " or "p=0 " for row R45
 DO 09
   XEQ 32                        ; -> :USED?:
   RCL 39
@@ -736,6 +754,7 @@ XEQ 35                          ; -> :ONE:
 RCL 42
 x→α 34
 RTN
+@ LBL :ONE: "=1 " (the variable is true in this row)
 LBL 35                          ; :ONE:
 "=1 "
 STO 42
@@ -773,6 +792,7 @@ STO 34
 STO 40
 6
 STO 44
+@ LBL :TBV: the loop over the variables p..u (R44 = 6 down to 1): each one used gets its column header
 LBL 37                          ; :TBV:
 XEQ 32                          ; -> :USED?:
 RCL 39
@@ -803,6 +823,7 @@ RCL 40
 STO 43
 X=0?
 GTO 40                          ; -> :TBF:
+@ LBL :TBB: the loop over the variables used (R43 down to 1): its 0 or 1 in row k
 LBL 39                          ; :TBB:
 @ the bit of k for the variable n - j (the first one: the highest bit)
 RCL 38
@@ -839,6 +860,7 @@ RCL 49
 STO+ 45
 DSE 43
 GTO 39                          ; -> :TBB:
+@ LBL :TBF: the row's end: "| " and the formula's value
 LBL 40                          ; :TBF:
 @ the formula's value in row m: bit m of the result word
 "| 0"
@@ -887,6 +909,7 @@ STO 41
 1
 X≥Y?
 GTO 42                          ; -> :TBK:
+@ LBL :TBL: the loop over the blocks of 16 rows (R41 down to 1): "BLOCK n" under each column
 LBL 41                          ; :TBL:
 " BLOCK "
 STO 33
@@ -904,6 +927,7 @@ RCL 41
 ATEXT Z
 DSE 41
 GTO 41                          ; -> :TBL:
+@ LBL :TBK: ANY KEY: BACK, then the key wait
 LBL 42                          ; :TBK:
 "ANY KEY: BACK"
 4
@@ -1062,6 +1086,7 @@ x→α 42
 αPOS 42
 STO 45
 STO 44
+@ each symbol of the page (R44 counts down): its glyph label (74 + code) written over its soft key
 DO 10
   RCL 41
   STO 42
